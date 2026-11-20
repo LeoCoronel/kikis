@@ -1,0 +1,97 @@
+---
+import Base from "../../layouts/Base.astro";
+import Nav from "../../components/Nav.astro";
+import Footer from "../../components/Footer.astro";
+import ComboCard from "../../components/ComboCard.astro";
+import { loadCombos, ESTADO_LABEL, money, fotoDe } from "../../lib/catalog";
+
+export async function getStaticPaths() {
+  const combos = await loadCombos();
+  return combos.map((c) => ({ params: { slug: c.slug }, props: { c } }));
+}
+const { c } = Astro.props;
+const all = await loadCombos();
+const otros = all.filter((x) => x.id !== c.id).slice(0, 3);
+const out = c.estado === "agotado";
+const foto = fotoDe(c, 960);
+const incluye = c.items.map((it) => it.product.nombre).join(", ");
+
+// Un selector por cada unidad con tonos (si lleva dos del mismo, dos selectores)
+const parts = c.items.flatMap((it) =>
+  Array.from({ length: it.qty }, (_, k) => ({
+    product: it.product,
+    label: it.qty > 1 ? `${it.product.nombre} (${k + 1} de ${it.qty})` : it.product.nombre,
+  })),
+);
+---
+<Base title={`${c.nombre} · Kiki's makeup`} description={`${c.nombre}: ${incluye}. ${c.ahorro > 0 ? `Ahorrás ${money(c.ahorro)}.` : ""}`}>
+<Nav />
+<main id="top">
+  <div class="page wrap">
+    <nav class="crumbs" aria-label="Ubicación">
+      <a href="/">Inicio</a><span aria-hidden="true">/</span>
+      <a href="/combos/">Combos</a><span aria-hidden="true">/</span>
+      <span>{c.nombre}</span>
+    </nav>
+
+    <div class="grid product" data-item data-id={c.id} data-name={c.nombre} data-brand="" data-price={c.precio} data-url={`/combo/${c.slug}/`}>
+      <div class="product__media span-6">
+        <span class="shop-ph shop-ph--big ph--combos"><b>Combo</b><small>{c.items.length} productos</small><img src="/kiki/kiki-retrato-96.webp" alt="" width="56" height="56" /></span>
+        {foto && <img class="shop-photo" data-photo src={foto} alt={c.nombre} width="960" height="960" fetchpriority="high" />}
+      </div>
+
+      <div class="product__info span-6">
+        <p class="t-label muted">Combo</p>
+        <h1>{c.nombre}</h1>
+        <p class="product__price">{money(c.precio)}</p>
+        {c.ahorro > 0 && <p class="product__save">Por separado {money(c.separado)}. Ahorrás {money(c.ahorro)}.</p>}
+        <p class={`product__estado product__estado--${c.estado}`}>{ESTADO_LABEL[c.estado]}</p>
+
+        <div class="combo-parts" id="tonos">
+          <h2>Qué incluye</h2>
+          {
+            parts.map((part, i) => (
+              <div class="combo-part">
+                <div class="combo-part__head">
+                  <a href={`/producto/${part.product.slug}/`}>{part.label}</a>
+                  <small>{[part.product.marca, money(part.product.precio)].filter(Boolean).join(" · ")}</small>
+                </div>
+                {part.product.tonos.length > 0 && (
+                  <fieldset class="tones">
+                    <legend class="sr-only">Tono de {part.label}</legend>
+                    <div class="tones__row">
+                      {part.product.tonos.map((t, k) => (
+                        <label class="tone">
+                          <input type="radio" name={`parte-${i}`} value={t} data-tone-input data-comp={part.label} checked={k === 0} />
+                          <span>{t}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                )}
+              </div>
+            ))
+          }
+        </div>
+
+        <div class="btn-row product__actions">
+          <button class="btn btn--secondary" type="button" data-add disabled={out}>{out ? "Agotado" : "Agregar al pedido"}</button>
+          <a class="link" href="/pedido/">Ver mi pedido</a>
+        </div>
+      </div>
+    </div>
+
+    {
+      otros.length > 0 && (
+        <div class="related">
+          <h2>Más combos</h2>
+          <div class="grid">
+            {otros.map((o) => <ComboCard c={o} />)}
+          </div>
+        </div>
+      )
+    }
+  </div>
+</main>
+<Footer />
+</Base>

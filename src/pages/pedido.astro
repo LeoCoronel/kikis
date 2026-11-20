@@ -1,0 +1,61 @@
+---
+import Base from "../layouts/Base.astro";
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+import { loadCatalog, loadCombos } from "../lib/catalog";
+import { SITE } from "../config";
+
+const all = await loadCatalog();
+const combos = await loadCombos();
+// Precios y disponibilidad vigentes, para refrescar lo guardado en el navegador
+const prices = {
+  ...Object.fromEntries(all.map((p) => [p.id, { name: p.nombre, brand: p.marca, price: p.precio, estado: p.estado, url: `/producto/${p.slug}/` }])),
+  ...Object.fromEntries(combos.map((c) => [c.id, { name: c.nombre, brand: "", price: c.precio, estado: c.estado, url: `/combo/${c.slug}/` }])),
+};
+const waHref = `https://wa.me/${SITE.whatsapp}`;
+---
+<Base title="Tu pedido · Kiki's makeup" description="Revisá tu pedido y enviálo por WhatsApp: confirmamos disponibilidad y entrega.">
+<Nav />
+<main id="top">
+  <div class="page wrap" data-order>
+    <nav class="crumbs" aria-label="Ubicación">
+      <a href="/">Inicio</a><span aria-hidden="true">/</span><span>Mi pedido</span>
+    </nav>
+    <div class="page-head">
+      <h1>Tu pedido</h1>
+      <p>Revisá los productos y mandalo por WhatsApp: confirmamos disponibilidad y entrega.</p>
+    </div>
+    <script type="application/json" id="order-prices" set:html={JSON.stringify(prices)} />
+
+    <div class="grid order-grid">
+      <div class="card card--plan span-6 m-nolift order-card">
+        <h2 class="order-card__title">Tus productos</h2>
+        <div class="order-empty" data-order-empty>
+          <p>Todavía no sumaste productos.</p>
+          <a class="link" href="/tienda/">Ver la tienda</a>
+          <img class="is-standin" src="/kiki/kiki-durmiendo-960.webp" srcset="/kiki/kiki-durmiendo-480.webp 480w, /kiki/kiki-durmiendo-960.webp 960w" sizes="(max-width: 639px) 342px, 560px" alt="" width="960" height="784">
+        </div>
+        <ul class="rows order-list" data-order-list hidden></ul>
+        <p class="order-total" data-order-total hidden><span>Total</span><span data-total>$0</span></p>
+      </div>
+      <form class="card card--plan span-6 start-7 m-nolift" action={waHref} method="get" target="_blank" data-order-form>
+        <h2 class="order-card__title">Tus datos</h2>
+        <div class="form">
+          <label class="field">Nombre<input name="nombre" type="text" autocomplete="given-name" required></label>
+          <label class="field">Zona de entrega
+            <select name="zona" required>
+              <option value="">Elegir una zona</option>
+              {SITE.zones.map((z) => <option value={z}>{z}</option>)}
+            </select>
+          </label>
+          <label class="field field--full">Comentario (opcional)<input name="comentario" type="text" placeholder="Horarios que te quedan bien"></label>
+          <input type="hidden" name="text" value="">
+          <div class="btn-row"><button class="btn btn--primary" type="submit">{SITE.mainAction}</button></div>
+          <p class="t-small muted" data-order-note>Se abre WhatsApp con tu pedido listo para enviar. Pagos: Mercado Pago, transferencia o efectivo.</p>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+<Footer />
+</Base>

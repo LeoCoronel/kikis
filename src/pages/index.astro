@@ -1,0 +1,129 @@
+---
+import Base from "../layouts/Base.astro";
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+import ComboCard from "../components/ComboCard.astro";
+import { loadCatalog, loadCombos, categoriesOf, CATEGORY_KIKI } from "../lib/catalog";
+import { SITE } from "../config";
+
+const all = await loadCatalog();
+const categories = categoriesOf(all).filter((c) => c.slug !== "combos").slice(0, 4);
+// Los combos marcados como "más pedidos" en la planilla (hasta 6)
+const combos = await loadCombos();
+const masPedidos = combos.filter((c) => c.masPedido);
+if (masPedidos.length > 6) console.warn(`Hay ${masPedidos.length} combos marcados como más pedidos: en la portada se muestran 6.`);
+const picks = masPedidos.slice(0, 6);
+const zones = SITE.zones.join(", ").replace(/, ([^,]*)$/, " y $1");
+---
+<Base
+  title="Kiki's makeup · Maquillaje y skincare sellados en San Miguel"
+  description="Maquillaje y skincare sellados, aprobados por ANMAT y cruelty free. Entregas en San Miguel, Moreno y José C. Paz. Pedido por WhatsApp."
+>
+<Nav />
+
+<main id="top">
+  <section class="home-hero ground-brand" aria-labelledby="hero-h">
+    <div class="wrap grid home-hero__grid">
+      <div class="home-hero__copy span-6">
+        <h1 id="hero-h">Kiki's makeup</h1>
+        <p class="home-hero__lead">Maquillaje y skincare en San Miguel.</p>
+        <div class="btn-row">
+          <a class="btn btn--primary" href="/tienda/">Comprar ahora</a>
+        </div>
+      </div>
+      <div class="home-hero__art span-6">
+        <img src="/kiki/kiki-saluda-960.webp" srcset="/kiki/kiki-saluda-480.webp 480w, /kiki/kiki-saluda-960.webp 960w" sizes="(max-width: 639px) 300px, (max-width: 1023px) 420px, 520px" alt="Kiki, la gata de la tienda, saludando" width="960" height="1076" fetchpriority="high">
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="categorias" aria-labelledby="categorias-h">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="categorias-h">¿Qué estás buscando?</h2>
+      </div>
+      <div class="grid">
+        {
+          categories.map((c) => (
+            <a class="tile span-3 cat-tile" href={`/tienda/${c.slug}/`}>
+              <div class="tile__media">
+                <img class="is-standin" src={`/kiki/kiki-${CATEGORY_KIKI[c.slug] ?? "retrato"}-480.webp`} alt="" width="480" height="480" loading="lazy" />
+              </div>
+              <div class="tile__head"><h3>{c.nombre}</h3><span class="tile__price">{c.total}</span></div>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  {
+    picks.length > 0 && (
+      <section class="section" id="destacados" aria-labelledby="destacados-h">
+        <div class="wrap">
+          <div class="section-head--split section-head">
+            <div>
+              <h2 id="destacados-h">Los combos más pedidos</h2>
+              <p>Salen más baratos que comprar cada producto por separado.</p>
+            </div>
+            <a class="link" href="/combos/">Ver todos los combos</a>
+          </div>
+          <div class="grid">
+            {picks.map((c) => <ComboCard c={c} />)}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <section class="section band-surface" id="calidad" aria-labelledby="calidad-h">
+    <div class="wrap grid">
+      <div class="span-6">
+        <div class="section-head">
+          <h2 id="calidad-h">Sellados, aprobados y cruelty free</h2>
+        </div>
+        <ul class="rows">
+          <li><span class="rows__name">Productos sellados<small>Cada producto llega cerrado.</small></span></li>
+          <li><span class="rows__name">Aprobados por ANMAT<small>Elegimos solo productos con aprobación.</small></span></li>
+          <li><span class="rows__name">Vencimientos controlados<small>Revisamos las fechas antes de cada entrega.</small></span></li>
+          <li><span class="rows__name">Cruelty free<small>Ningún producto se testea en animales.</small></span></li>
+        </ul>
+      </div>
+      <div class="frame frame--photo shop-frame span-6 start-7">
+        <img class="frame__img is-standin" src="/kiki/kiki-corazon-960.webp" srcset="/kiki/kiki-corazon-480.webp 480w, /kiki/kiki-corazon-960.webp 960w" sizes="(max-width: 639px) 342px, (max-width: 1023px) 672px, 628px" alt="Kiki abrazando un corazón" width="960" height="1078" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="como-comprar" aria-labelledby="como-h" style="--hm: 2">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="como-h">Comprar es fácil</h2>
+        <p>Armás el pedido acá y lo cerramos por WhatsApp. No hace falta pagar en la web.</p>
+      </div>
+      <div class="grid">
+        <article class="card card--row card--open span-4 m-nolift">
+          <span class="step-num" aria-hidden="true">1</span>
+          <h3>Elegí lo que te gusta</h3>
+          <p>Mirá los tonos, fijate qué hay disponible y sumalo a tu pedido.</p>
+          <div class="panel shop-panel"><img class="frame__img is-standin" src="/kiki/kiki-bolsa-960.webp" srcset="/kiki/kiki-bolsa-480.webp 480w, /kiki/kiki-bolsa-960.webp 960w" sizes="(max-width: 639px) 342px, 410px" alt="" width="960" height="1120" loading="lazy"></div>
+        </article>
+        <article class="card card--row card--open span-4 m-nolift">
+          <span class="step-num" aria-hidden="true">2</span>
+          <h3>Mandanos tu pedido</h3>
+          <p>Se arma solo un mensaje con tu lista y el total. Solo falta enviarlo.</p>
+          <div class="panel shop-panel"><img class="frame__img is-standin" src="/kiki/kiki-carrito-960.webp" srcset="/kiki/kiki-carrito-480.webp 480w, /kiki/kiki-carrito-960.webp 960w" sizes="(max-width: 639px) 342px, 410px" alt="" width="960" height="1200" loading="lazy"></div>
+        </article>
+        <article class="card card--row card--open span-4 m-nolift">
+          <span class="step-num" aria-hidden="true">3</span>
+          <h3>Coordinamos la entrega</h3>
+          <p>Entregamos en San Miguel, Moreno y José C. Paz. Pagás con Mercado Pago, transferencia o efectivo.</p>
+          <div class="panel shop-panel"><img class="frame__img is-standin" src="/kiki/kiki-caminando-960.webp" srcset="/kiki/kiki-caminando-480.webp 480w, /kiki/kiki-caminando-960.webp 960w" sizes="(max-width: 639px) 342px, 410px" alt="" width="960" height="817" loading="lazy"></div>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<Footer closing />
+</Base>

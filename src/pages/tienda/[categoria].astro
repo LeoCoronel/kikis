@@ -1,0 +1,20 @@
+---
+import Shop from "../../components/Shop.astro";
+import { loadCatalog, categoriesOf } from "../../lib/catalog";
+
+export async function getStaticPaths() {
+  const products = await loadCatalog();
+  return categoriesOf(products).map((c) => ({ params: { categoria: c.slug }, props: { nombre: c.nombre, total: c.total } }));
+}
+const { nombre, total } = Astro.props;
+const products = await loadCatalog();
+const intro = `${total} ${total === 1 ? "producto" : "productos"} de ${nombre.toLowerCase()}, con tonos y disponibilidad al día.`;
+---
+<Shop
+  products={products}
+  title={nombre}
+  intro={intro}
+  cat={nombre}
+  pageTitle={`${nombre} · Kiki's makeup`}
+  description={`${nombre} en Kiki's makeup: ${intro}`}
+/>

@@ -1,0 +1,96 @@
+---
+import Nav from "./Nav.astro";
+import Footer from "./Footer.astro";
+import ProductCard from "./ProductCard.astro";
+import Base from "../layouts/Base.astro";
+import { categoriesOf, type Product } from "../lib/catalog";
+
+interface Props {
+  products: Product[];
+  title: string;
+  intro: string;
+  /** Categoría de la página ("" = toda la tienda) */
+  cat?: string;
+  pageTitle: string;
+  description: string;
+}
+const { products, title, intro, cat = "", pageTitle, description } = Astro.props;
+const categories = categoriesOf(products);
+const brands = [...new Set(products.map((p) => p.marca).filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
+---
+<Base title={pageTitle} description={description}>
+<Nav />
+<main id="top">
+  <div class="page wrap" data-shop data-cat={cat}>
+    <nav class="crumbs" aria-label="Ubicación">
+      <a href="/">Inicio</a><span aria-hidden="true">/</span>
+      {cat ? <><a href="/tienda/">Tienda</a><span aria-hidden="true">/</span><span>{title}</span></> : <span>Tienda</span>}
+    </nav>
+    <div class="page-head">
+      <h1>{title}</h1>
+      <p>{intro}</p>
+    </div>
+
+    <form class="shop-bar" role="search" action="/tienda/">
+      <label class="field shop-search">
+        <span class="sr-only">Buscar productos</span>
+        <input type="search" data-f="q" placeholder="Buscar por nombre, marca o tipo" autocomplete="off" />
+      </label>
+      <label class="field">
+        <span class="sr-only">Categoría</span>
+        <select data-f="cat">
+          <option value="">Todas las categorías</option>
+          {categories.map((c) => <option value={c.nombre}>{c.nombre} ({c.total})</option>)}
+        </select>
+      </label>
+      <label class="field">
+        <span class="sr-only">Marca</span>
+        <select data-f="brand">
+          <option value="">Todas las marcas</option>
+          {brands.map((b) => <option value={b}>{b}</option>)}
+        </select>
+      </label>
+      <label class="field">
+        <span class="sr-only">Disponibilidad</span>
+        <select data-f="estado">
+          <option value="">Toda la disponibilidad</option>
+          <option value="hay">Hay disponible</option>
+          <option value="pedido">Por pedido</option>
+          <option value="tanda">Próxima tanda</option>
+        </select>
+      </label>
+      <label class="field">
+        <span class="sr-only">Ordenar</span>
+        <select data-f="sort">
+          <option value="novedades">Orden de la tienda</option>
+          <option value="precio-menor">Precio: menor a mayor</option>
+          <option value="precio-mayor">Precio: mayor a menor</option>
+          <option value="nombre">Nombre: A a Z</option>
+        </select>
+      </label>
+    </form>
+
+    <div class="shop-meta">
+      <span class="t-small muted" data-total-count aria-live="polite">{products.length} productos</span>
+      <button class="link shop-reset" type="button" data-reset hidden>Quitar filtros</button>
+    </div>
+
+    <div class="grid shop-list" data-list>
+      {products.map((p, i) => <ProductCard p={p} order={i} />)}
+    </div>
+
+    <div class="shop-empty" data-empty hidden>
+      <img class="is-standin" src="/kiki/kiki-triste-480.webp" alt="" width="240" height="274" />
+      <p>No encontramos productos con esos filtros.</p>
+    </div>
+
+    <div class="shop-more">
+      <button class="btn btn--secondary" type="button" data-more hidden>Ver más productos</button>
+    </div>
+  </div>
+</main>
+<Footer />
+<script>
+  import "../scripts/shop";
+</script>
+</Base>

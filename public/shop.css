@@ -1,0 +1,184 @@
+/* Estilos propios de la tienda de Kiki's makeup. Solo lo que el kit no trae: páginas de uso (tienda,
+   producto, pedido), tarjetas con marcador de foto y las ilustraciones de Kiki. Todo con tokens del sistema. */
+
+.nav__logo img, .footer .nav__logo img { height: 32px; width: 32px; }
+.footer .nav__logo img { margin-right: var(--s-2); }
+.nav__count { margin-left: var(--s-2); height: 22px; min-width: 22px; justify-content: center; background: var(--accent-ink); color: var(--accent); }
+.nav__count[hidden] { display: none; }
+
+/* texto de apoyo debajo del nombre en las filas */
+.rows .rows__name small { display: block; margin-top: var(--s-1); font-weight: 400; font-size: var(--t-small); color: var(--muted); }
+.ground-brand .rows .rows__name small { color: var(--ink); }
+.rows .rows__name a { text-decoration: none; }
+.rows .rows__name a:hover { text-decoration: underline; }
+
+/* ilustraciones de Kiki: se muestran enteras, nunca recortadas */
+img.is-standin, img.frame__img.is-standin, .frame--photo img.is-standin { object-fit: contain; }
+.shop-frame { background: var(--surface); border-radius: var(--r-lg); overflow: hidden; --ratio: 80%; }
+.shop-frame > img.frame__img { padding: var(--s-5); }
+.shop-panel { --p-h: 260px; --ground-bg: var(--surface); }
+.shop-panel > img.frame__img { width: 100%; height: 100%; padding: var(--s-4); object-fit: contain; }
+
+/* categorías de la portada */
+.cat-tile .tile__media img { object-fit: contain; padding: var(--s-4); }
+.cat-tile h3 { text-decoration: none; }
+
+/* ------------------------------------------------------------ páginas de uso: fluyen, no son pantallas fijas */
+.page { padding-top: calc(var(--nav) + var(--s-7)); padding-bottom: var(--s-10); }
+.crumbs { display: flex; flex-wrap: wrap; gap: var(--s-2); font-size: var(--t-small); color: var(--muted); margin-bottom: var(--s-5); }
+.crumbs a { color: inherit; text-decoration: none; }
+.crumbs a:hover { color: var(--ink); text-decoration: underline; }
+.page-head { display: grid; gap: var(--s-3); margin-bottom: var(--s-6); max-width: 760px; }
+.page-head h1 { font-size: clamp(36px, 4.4vw, 56px); line-height: 1.05; }
+.page-head p { color: var(--muted); font-size: var(--t-lead); }
+
+/* barra de búsqueda y filtros */
+.shop-bar { display: grid; grid-template-columns: minmax(0, 1.6fr) repeat(4, minmax(0, 1fr)); gap: var(--s-3); margin-bottom: var(--s-4); }
+.shop-bar .field input, .shop-bar .field select { width: 100%; }
+.shop-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--s-5); min-height: 24px; }
+.shop-reset { background: none; border: 0; padding: 0; cursor: pointer; font: inherit; color: inherit; }
+@media (max-width: 1023px) { .shop-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); } .shop-search { grid-column: 1 / -1; } }
+
+/* tarjeta de producto */
+.shop-card { gap: var(--s-3); min-width: 0; }
+.shop-card .tile__media { --tile-ratio: 4 / 5; display: block; }
+.shop-card .tile__head h3 a { color: inherit; text-decoration: none; }
+.shop-card .tile__head h3 a:hover { text-decoration: underline; }
+.shop-card .tile__facts { margin-top: calc(-1 * var(--s-2)); }
+.shop-card .btn { width: 100%; }
+.shop-card .btn:disabled { opacity: .55; cursor: not-allowed; }
+.shop-card[hidden] { display: none; }
+.shop-list { row-gap: var(--s-6); }
+
+/* sin foto todavía: la marca y la categoría sobre el color de la tienda */
+.shop-ph { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s-2); padding: var(--s-4); text-align: center; background: var(--surface); }
+.shop-ph b { font: var(--display-weight) clamp(22px, 2.2vw, 30px)/1.1 var(--font-display); letter-spacing: var(--display-tracking); font-weight: var(--display-weight); }
+.shop-ph small { font-size: var(--t-small); color: var(--muted); }
+.shop-ph--big { position: relative; inset: auto; width: 100%; height: 100%; }
+.shop-ph--big b { font-size: clamp(32px, 4vw, 56px); }
+
+.shop-more { display: flex; justify-content: center; margin-top: var(--s-8); }
+.shop-more .btn { min-width: 280px; }
+.shop-empty { display: grid; justify-items: center; gap: var(--s-4); padding-block: var(--s-8); color: var(--muted); text-align: center; }
+.shop-empty[hidden], .shop-more [hidden] { display: none; }
+.shop-empty img { width: 180px; height: auto; }
+
+/* página de producto */
+.product { align-items: start; row-gap: var(--s-7); }
+.product__media { position: relative; aspect-ratio: 1 / 1; background: var(--surface); border-radius: var(--r-lg); overflow: hidden; }
+.product__media > img { width: 100%; height: 100%; object-fit: cover; }
+.product__info { display: grid; gap: var(--s-4); align-content: start; }
+.product__info h1 { font-size: clamp(32px, 3.6vw, 48px); line-height: 1.05; }
+.product__price { font-size: var(--t-stat, 32px); font-weight: 500; font-variant-numeric: tabular-nums; }
+.product__estado { color: var(--muted); font-size: var(--t-small); font-weight: 500; }
+.product__estado--hay { color: var(--ink); }
+.tones { border: 0; padding: 0; margin: 0; display: grid; gap: var(--s-3); }
+.tones legend { font-size: var(--t-small); font-weight: 500; padding: 0; margin-bottom: var(--s-2); }
+.tones__row { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.tone { position: relative; }
+.tone input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.tone span { display: inline-flex; align-items: center; height: 40px; padding: 0 var(--s-4); border-radius: 999px; border: 1px solid var(--line-strong); font-size: var(--t-small); font-weight: 500; background: var(--bg); }
+.tone:hover span { border-color: var(--ink); }
+.tone input:checked + span { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.tone input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.product__actions { align-items: center; gap: var(--s-5); }
+.product__text { display: grid; gap: var(--s-2); }
+.product__text h2 { font-size: var(--t-card); font-family: var(--font-text); font-weight: 500; letter-spacing: 0; }
+.product__facts { list-style: none; margin: 0; padding: var(--s-4) 0 0; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-5); font-size: var(--t-small); color: var(--muted); }
+.related { margin-top: var(--s-9); }
+.related h2 { font-size: var(--t-h3, 28px); margin-bottom: var(--s-5); }
+
+/* pedido */
+.order-grid { align-items: start; row-gap: var(--s-6); }
+.order-empty { display: grid; justify-items: start; gap: var(--s-4); }
+.order-empty img { width: min(420px, 100%); height: auto; margin-top: var(--s-3); }
+.order-empty p { color: var(--muted); }
+.order-list { max-height: 520px; overflow: auto; }
+.order-item { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: var(--s-4); }
+.order-qty { display: inline-flex; align-items: center; gap: var(--s-3); font-variant-numeric: tabular-nums; }
+.order-qty button { width: 36px; height: 36px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--bg); color: var(--ink); font-size: 18px; line-height: 1; cursor: pointer; }
+.order-qty button:hover { background: var(--surface); }
+.order-total { display: flex; justify-content: space-between; margin-top: var(--s-4); padding-top: var(--s-4); border-top: 1px solid var(--line-strong); font-size: var(--t-lead); font-weight: 500; }
+.card--plan .btn-row .btn { width: 100%; }
+@media (max-width: 1023px) { .order-grid > *, .product > * { grid-column: 1 / -1; } }
+@media (max-width: 639px) {
+  .order-item { grid-template-columns: minmax(0, 1fr) auto; }
+  .order-item .rows__value { grid-column: 2; grid-row: 1; }
+  .order-qty { grid-column: 1 / -1; }
+  .nav__logo img { display: none; }
+  .close--word .section-head--split { flex-direction: column; align-items: stretch; }
+  .close--word .section-head--split .btn { width: 100%; }
+  .close__word { font-size: 16vw; }
+  .shop-more .btn { width: 100%; min-width: 0; }
+}
+
+/* pie compacto de las páginas de uso */
+.footer-compact { padding-bottom: var(--s-7); }
+
+
+/* ============================================================ ritmo único (altura por contenido) */
+/* Las secciones del inicio miden lo que mide su contenido; todas con el mismo espacio arriba y abajo. */
+main > section.section, footer.closing { height: auto; min-height: 0; padding-block: var(--s-9); }
+main > section.section > .wrap, footer.closing > .wrap { height: auto; }
+main > section.section > .wrap:not(.grid) { display: block; }
+.band-surface { background: var(--surface); }
+.band-surface .shop-frame { background: var(--bg); }
+footer.closing { padding-top: var(--s-9); }
+footer.closing .close__word { margin-top: var(--s-8); }
+@media (max-width: 639px) {
+  main > section.section, footer.closing { padding-block: var(--s-8); }
+}
+
+/* héroe en banda de color de marca */
+.home-hero { padding-top: calc(var(--nav) + var(--s-8)); padding-bottom: 0; overflow: clip; background: var(--bg); color: var(--ink); }
+.home-hero__grid { align-items: end; row-gap: var(--s-6); }
+.home-hero__copy { align-self: center; display: grid; gap: var(--s-5); padding-bottom: var(--s-8); }
+.home-hero h1 { font-size: clamp(40px, 5.4vw, 80px); line-height: 1; max-width: 12ch; }
+.home-hero__lead { font-size: var(--t-lead); line-height: 1.5; max-width: 40ch; }
+.home-hero__facts { font-size: var(--t-small); max-width: 52ch; }
+.home-hero .btn-row { margin-top: var(--s-2); }
+.home-hero__art { display: flex; justify-content: center; align-items: flex-end; }
+.home-hero__art img { width: min(100%, 520px); height: auto; display: block; }
+@media (max-width: 1023px) {
+  .home-hero__copy { padding-bottom: 0; }
+  .home-hero__art img { width: min(80%, 380px); }
+}
+
+/* ============================================================ tarjetas sin foto */
+.shop-card .tile__media { --tile-ratio: 1 / 1; }
+.shop-ph { background: var(--surface); }
+.shop-ph b { font-size: clamp(20px, 1.9vw, 26px); }
+.shop-ph img { position: absolute; right: var(--s-3); bottom: var(--s-3); width: 36px; height: 36px; opacity: .9; }
+.shop-ph--big img { width: 56px; height: 56px; right: var(--s-5); bottom: var(--s-5); }
+.ph--labios { background: color-mix(in oklab, var(--accent) 16%, var(--bg)); }
+.ph--rostro { background: color-mix(in oklab, var(--ink) 7%, var(--bg)); }
+.ph--ojos { background: color-mix(in oklab, var(--accent) 7%, var(--surface)); }
+.ph--skincare { background: color-mix(in oklab, var(--ink) 4%, var(--surface)); }
+
+/* ============================================================ pedido: dos tarjetas alineadas */
+.order-grid { align-items: stretch; }
+.order-card__title { font: 500 var(--t-card)/1.3 var(--font-text); letter-spacing: 0; margin-bottom: var(--s-4); }
+.order-card .order-list { max-height: 440px; }
+.order-card .order-empty img { width: min(280px, 70%); }
+.order-card { display: block; }
+
+main > section.home-hero { height: auto; min-height: 0; }
+main > section.home-hero > .wrap { height: auto; }
+
+.home-hero h1 { font-size: clamp(56px, 8vw, 120px); max-width: none; letter-spacing: var(--display-tracking-xl); }
+.home-hero__lead { font-size: var(--t-lead); max-width: 30ch; }
+
+
+/* ============================================================ fotos sobre el marcador y combos */
+.tile__media, .product__media { position: relative; }
+img.shop-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ph--combos { background: color-mix(in oklab, var(--accent) 22%, var(--bg)); }
+.combo-card__save { color: var(--ink); font-weight: 500; }
+.product__save { font-size: var(--t-small); color: var(--ink); font-weight: 500; }
+.combo-parts { display: grid; gap: var(--s-4); }
+.combo-parts h2 { font: 500 var(--t-card)/1.3 var(--font-text); letter-spacing: 0; }
+.combo-part { display: grid; gap: var(--s-3); padding: var(--s-4) 0; border-top: 1px solid var(--line); }
+.combo-part__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-4); flex-wrap: wrap; }
+.combo-part__head a { font-weight: 500; text-decoration: none; }
+.combo-part__head a:hover { text-decoration: underline; }
+.combo-part__head small { color: var(--muted); font-size: var(--t-small); }

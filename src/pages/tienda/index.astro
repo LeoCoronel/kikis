@@ -1,0 +1,12 @@
+---
+import Shop from "../../components/Shop.astro";
+import { loadCatalog } from "../../lib/catalog";
+const products = await loadCatalog();
+---
+<Shop
+  products={products}
+  title="Tienda"
+  intro="Maquillaje y skincare con tonos, marcas y disponibilidad al día."
+  pageTitle="Tienda · Kiki's makeup"
+  description="Todo el maquillaje y el skincare de Kiki's makeup: filtrá por categoría, marca y disponibilidad."
+/>

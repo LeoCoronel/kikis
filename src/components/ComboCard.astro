@@ -1,0 +1,43 @@
+---
+import { ESTADO_LABEL, money, fotoDe, type Combo } from "../lib/catalog";
+interface Props {
+  c: Combo;
+  span?: 3 | 4;
+}
+const { c, span = 4 } = Astro.props;
+const href = `/combo/${c.slug}/`;
+const out = c.estado === "agotado";
+const hayTonos = c.items.some((it) => it.product.tonos.length > 0);
+const foto = fotoDe(c, 600);
+const incluye = c.items.map((it) => (it.qty > 1 ? `${it.qty}x ${it.product.nombre}` : it.product.nombre)).join(" + ");
+---
+<article
+  class={`tile shop-card combo-card span-${span}`}
+  data-item
+  data-id={c.id}
+  data-name={c.nombre}
+  data-brand=""
+  data-price={c.precio}
+  data-url={href}
+  data-estado={c.estado}
+>
+  <a class="tile__media" href={href} tabindex="-1" aria-hidden="true">
+    <span class="shop-ph ph--combos"><b>Combo</b><small>{c.items.length === 1 ? "Pack" : `${c.items.length} productos`}</small><img src="/kiki/kiki-retrato-96.webp" alt="" width="36" height="36" loading="lazy" /></span>
+    {foto && <img class="shop-photo" data-photo src={foto} alt="" width="600" height="600" loading="lazy" decoding="async" />}
+  </a>
+  <div class="tile__head">
+    <h3><a href={href}>{c.nombre}</a></h3>
+    <span class="tile__price">{money(c.precio)}</span>
+  </div>
+  <p class="tile__facts">Incluye {incluye}</p>
+  <p class="tile__facts combo-card__save">{c.ahorro > 0 ? `Ahorrás ${money(c.ahorro)}` : ESTADO_LABEL[c.estado]}{c.ahorro > 0 && c.estado !== "hay" ? ` · ${ESTADO_LABEL[c.estado]}` : ""}</p>
+  {
+    out ? (
+      <button class="btn btn--secondary" type="button" disabled>Agotado</button>
+    ) : hayTonos ? (
+      <a class="btn btn--secondary" href={`${href}#tonos`}>Elegir tonos</a>
+    ) : (
+      <button class="btn btn--secondary" type="button" data-add>Agregar al pedido</button>
+    )
+  }
+</article>

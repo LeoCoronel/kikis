@@ -1,0 +1,95 @@
+---
+import Base from "../../layouts/Base.astro";
+import Nav from "../../components/Nav.astro";
+import Footer from "../../components/Footer.astro";
+import ProductCard from "../../components/ProductCard.astro";
+import { loadCatalog, ESTADO_LABEL, money, slugify, fotoDe } from "../../lib/catalog";
+
+export async function getStaticPaths() {
+  const all = await loadCatalog();
+  return all.map((p) => ({ params: { slug: p.slug }, props: { p } }));
+}
+const { p } = Astro.props;
+const all = await loadCatalog();
+const related = all.filter((x) => x.id !== p.id && x.categoria === p.categoria).slice(0, 4);
+const out = p.estado === "agotado";
+const foto = fotoDe(p, 960);
+const catSlug = slugify(p.categoria);
+const desc = p.descripcion || `${p.nombre}${p.marca ? ` de ${p.marca}` : ""} en Kiki's makeup.`;
+---
+<Base title={`${p.nombre} · Kiki's makeup`} description={desc}>
+<Nav />
+<main id="top">
+  <div class="page wrap">
+    <nav class="crumbs" aria-label="Ubicación">
+      <a href="/">Inicio</a><span aria-hidden="true">/</span>
+      <a href="/tienda/">Tienda</a><span aria-hidden="true">/</span>
+      <a href={`/tienda/${catSlug}/`}>{p.categoria}</a><span aria-hidden="true">/</span>
+      <span>{p.nombre}</span>
+    </nav>
+
+    <div
+      class="grid product"
+      data-item
+      data-id={p.id}
+      data-name={p.nombre}
+      data-brand={p.marca}
+      data-price={p.precio}
+      data-url={`/producto/${p.slug}/`}
+    >
+      <div class="product__media span-6">
+        <span class={`shop-ph shop-ph--big ph--${slugify(p.categoria)}`}><b>{p.marca || "Kiki's"}</b><small>{p.categoria}</small><img src="/kiki/kiki-retrato-96.webp" alt="" width="56" height="56" /></span>
+        {foto && <img class="shop-photo" data-photo src={foto} alt={p.nombre} width="960" height="960" fetchpriority="high" />}
+      </div>
+
+      <div class="product__info span-6">
+        {p.marca && <p class="t-label muted">{p.marca}</p>}
+        <h1>{p.nombre}</h1>
+        <p class="product__price">{money(p.precio)}</p>
+        <p class={`product__estado product__estado--${p.estado}`}>{ESTADO_LABEL[p.estado]}</p>
+
+        {
+          p.tonos.length > 0 && (
+            <fieldset class="tones" id="tonos">
+              <legend>Tono</legend>
+              <div class="tones__row">
+                {p.tonos.map((t, i) => (
+                  <label class="tone">
+                    <input type="radio" name="tono" value={t} data-tone-input checked={i === 0} />
+                    <span>{t}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          )
+        }
+
+        <div class="btn-row product__actions">
+          <button class="btn btn--secondary" type="button" data-add disabled={out}>{out ? "Agotado" : "Agregar al pedido"}</button>
+          <a class="link" href="/pedido/">Ver mi pedido</a>
+        </div>
+
+        {p.descripcion && <div class="product__text"><h2>Descripción</h2><p>{p.descripcion}</p></div>}
+        {p.ingredientes && <div class="product__text"><h2>Ingredientes</h2><p>{p.ingredientes}</p></div>}
+        <ul class="product__facts">
+          <li>Producto sellado</li>
+          <li>Aprobado por ANMAT</li>
+          <li>Cruelty free</li>
+        </ul>
+      </div>
+    </div>
+
+    {
+      related.length > 0 && (
+        <div class="related">
+          <h2>Más de {p.categoria.toLowerCase()}</h2>
+          <div class="grid">
+            {related.map((r, i) => <ProductCard p={r} order={i} />)}
+          </div>
+        </div>
+      )
+    }
+  </div>
+</main>
+<Footer />
+</Base>

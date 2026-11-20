@@ -1,0 +1,35 @@
+---
+import Base from "../../layouts/Base.astro";
+import Nav from "../../components/Nav.astro";
+import Footer from "../../components/Footer.astro";
+import ComboCard from "../../components/ComboCard.astro";
+import { loadCombos } from "../../lib/catalog";
+
+const combos = await loadCombos();
+// Los más pedidos primero; el resto conserva el orden de la planilla
+const sorted = [...combos].sort((a, b) => Number(b.masPedido) - Number(a.masPedido));
+---
+<Base title="Combos · Kiki's makeup" description="Combos de maquillaje y skincare que salen más baratos que comprar cada producto por separado.">
+<Nav />
+<main id="top">
+  <div class="page wrap">
+    <nav class="crumbs" aria-label="Ubicación">
+      <a href="/">Inicio</a><span aria-hidden="true">/</span><span>Combos</span>
+    </nav>
+    <div class="page-head">
+      <h1>Combos</h1>
+      <p>Salen más baratos que comprar cada producto por separado. Elegís el tono de cada uno.</p>
+    </div>
+    {
+      sorted.length > 0 ? (
+        <div class="grid shop-list">
+          {sorted.map((c) => <ComboCard c={c} />)}
+        </div>
+      ) : (
+        <p class="muted">Pronto vamos a sumar combos.</p>
+      )
+    }
+  </div>
+</main>
+<Footer />
+</Base>
