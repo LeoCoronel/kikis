@@ -14,7 +14,6 @@ export interface Product {
   tonos: string[];
   estado: Estado;
   fotoArchivo: string; // nombre del archivo en Cloudinary (la columna foto, o el id)
-  destacado: boolean;
 }
 
 export interface ComboItem {
@@ -127,7 +126,6 @@ function toProduct(r: Record<string, string>, i: number): Product {
     tonos: (r.tonos || "").split("|").map((t) => t.trim()).filter(Boolean),
     estado: estado in ESTADO_LABEL ? estado : "hay",
     fotoArchivo: (r.foto || "").trim() || id,
-    destacado: isYes(r.destacado || ""),
   };
 }
 
