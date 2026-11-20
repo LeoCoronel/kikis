@@ -1,4 +1,5 @@
 ---
+import { u } from "../config";
 import Nav from "./Nav.astro";
 import Footer from "./Footer.astro";
 import ProductCard from "./ProductCard.astro";
@@ -23,15 +24,15 @@ const brands = [...new Set(products.map((p) => p.marca).filter(Boolean))].sort((
 <main id="top">
   <div class="page wrap" data-shop data-cat={cat}>
     <nav class="crumbs" aria-label="Ubicación">
-      <a href="/">Inicio</a><span aria-hidden="true">/</span>
-      {cat ? <><a href="/tienda/">Tienda</a><span aria-hidden="true">/</span><span>{title}</span></> : <span>Tienda</span>}
+      <a href={u("/")}>Inicio</a><span aria-hidden="true">/</span>
+      {cat ? <><a href={u("/tienda/")}>Tienda</a><span aria-hidden="true">/</span><span>{title}</span></> : <span>Tienda</span>}
     </nav>
     <div class="page-head">
       <h1>{title}</h1>
       <p>{intro}</p>
     </div>
 
-    <form class="shop-bar" role="search" action="/tienda/">
+    <form class="shop-bar" role="search" action={u("/tienda/")}>
       <label class="field shop-search">
         <span class="sr-only">Buscar productos</span>
         <input type="search" data-f="q" placeholder="Buscar por nombre, marca o tipo" autocomplete="off" />
@@ -80,7 +81,7 @@ const brands = [...new Set(products.map((p) => p.marca).filter(Boolean))].sort((
     </div>
 
     <div class="shop-empty" data-empty hidden>
-      <img class="is-standin" src="/kiki/kiki-triste-480.webp" alt="" width="240" height="274" />
+      <img class="is-standin" src={u("/kiki/kiki-triste-480.webp")} alt="" width="240" height="274" />
       <p>No encontramos productos con esos filtros.</p>
     </div>
 

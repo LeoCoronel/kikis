@@ -23,3 +23,7 @@ export function photoUrl(file: string, width = 600): string {
   if (!SITE.cloudinary || !file) return "";
   return `https://res.cloudinary.com/${SITE.cloudinary}/image/upload/f_auto,q_auto,w_${width}/${encodeURIComponent(file)}`;
 }
+
+// El sitio vive en una subcarpeta (usuario.github.io/kikis/): todas las rutas propias pasan por u().
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+export const u = (path: string) => (/^(https?:|mailto:|tel:)/.test(path) ? path : BASE + path);

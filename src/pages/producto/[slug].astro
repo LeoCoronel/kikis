@@ -1,4 +1,5 @@
 ---
+import { u } from "../../config";
 import Base from "../../layouts/Base.astro";
 import Nav from "../../components/Nav.astro";
 import Footer from "../../components/Footer.astro";
@@ -22,9 +23,9 @@ const desc = p.descripcion || `${p.nombre}${p.marca ? ` de ${p.marca}` : ""} en 
 <main id="top">
   <div class="page wrap">
     <nav class="crumbs" aria-label="Ubicación">
-      <a href="/">Inicio</a><span aria-hidden="true">/</span>
-      <a href="/tienda/">Tienda</a><span aria-hidden="true">/</span>
-      <a href={`/tienda/${catSlug}/`}>{p.categoria}</a><span aria-hidden="true">/</span>
+      <a href={u("/")}>Inicio</a><span aria-hidden="true">/</span>
+      <a href={u("/tienda/")}>Tienda</a><span aria-hidden="true">/</span>
+      <a href={u(`/tienda/${catSlug}/`)}>{p.categoria}</a><span aria-hidden="true">/</span>
       <span>{p.nombre}</span>
     </nav>
 
@@ -35,10 +36,10 @@ const desc = p.descripcion || `${p.nombre}${p.marca ? ` de ${p.marca}` : ""} en 
       data-name={p.nombre}
       data-brand={p.marca}
       data-price={p.precio}
-      data-url={`/producto/${p.slug}/`}
+      data-url={u(`/producto/${p.slug}/`)}
     >
       <div class="product__media span-6">
-        <span class={`shop-ph shop-ph--big ph--${slugify(p.categoria)}`}><b>{p.marca || "Kiki's"}</b><small>{p.categoria}</small><img src="/kiki/kiki-retrato-96.webp" alt="" width="56" height="56" /></span>
+        <span class={`shop-ph shop-ph--big ph--${slugify(p.categoria)}`}><b>{p.marca || "Kiki's"}</b><small>{p.categoria}</small><img src={u("/kiki/kiki-retrato-96.webp")} alt="" width="56" height="56" /></span>
         {foto && <img class="shop-photo" data-photo src={foto} alt={p.nombre} width="960" height="960" fetchpriority="high" />}
       </div>
 
@@ -66,7 +67,7 @@ const desc = p.descripcion || `${p.nombre}${p.marca ? ` de ${p.marca}` : ""} en 
 
         <div class="btn-row product__actions">
           <button class="btn btn--secondary" type="button" data-add disabled={out}>{out ? "Agotado" : "Agregar al pedido"}</button>
-          <a class="link" href="/pedido/">Ver mi pedido</a>
+          <a class="link" href={u("/pedido/")}>Ver mi pedido</a>
         </div>
 
         {p.descripcion && <div class="product__text"><h2>Descripción</h2><p>{p.descripcion}</p></div>}

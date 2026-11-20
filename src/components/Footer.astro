@@ -1,5 +1,5 @@
 ---
-import { SITE } from "../config";
+import { SITE, u } from "../config";
 interface Props {
   /** true: el cierre grande de la portada (una pantalla). false: pie compacto de las demás páginas. */
   closing?: boolean;
@@ -31,7 +31,7 @@ const links = {
               <h2 id="close-h">Tu pedido, coordinado por WhatsApp</h2>
               <p class="t-lead">Respondemos para confirmar disponibilidad y el punto de entrega.</p>
             </div>
-            <a class="btn btn--primary" href="/pedido/">{SITE.mainAction}</a>
+            <a class="btn btn--primary" href={u("/pedido/")}>{SITE.mainAction}</a>
           </div>
           <p class="close__word" aria-hidden="true">Kiki's makeup</p>
         </div>
@@ -40,12 +40,12 @@ const links = {
     <div class:list={{ closing__links: closing, "footer-compact": !closing }}>
       <div class="grid">
         <div class="span-4 stack-4">
-          <a class="nav__logo" href="/"><img src="/kiki/kiki-retrato-96.webp" alt="" width="32" height="32" loading="lazy">Kiki's makeup</a>
+          <a class="nav__logo" href={u("/")}><img src={u("/kiki/kiki-retrato-96.webp")} alt="" width="32" height="32" loading="lazy">Kiki's makeup</a>
           <p class="footer__lede">Maquillaje y skincare en San Miguel</p>
         </div>
-        <div class="span-2 footer__col"><h4>Tienda</h4><ul>{links.tienda.map(([t, h]) => <li><a href={h}>{t}</a></li>)}</ul></div>
-        <div class="span-2 footer__col"><h4>Comprar</h4><ul>{links.comprar.map(([t, h]) => <li><a href={h}>{t}</a></li>)}</ul></div>
-        <div class="span-2 footer__col"><h4>Información</h4><ul>{links.info.map(([t, h]) => <li><a href={h}>{t}</a></li>)}</ul></div>
+        <div class="span-2 footer__col"><h4>Tienda</h4><ul>{links.tienda.map(([t, h]) => <li><a href={u(h)}>{t}</a></li>)}</ul></div>
+        <div class="span-2 footer__col"><h4>Comprar</h4><ul>{links.comprar.map(([t, h]) => <li><a href={u(h)}>{t}</a></li>)}</ul></div>
+        <div class="span-2 footer__col"><h4>Información</h4><ul>{links.info.map(([t, h]) => <li><a href={u(h)}>{t}</a></li>)}</ul></div>
         <div class="span-2 footer__col"><h4>Seguinos</h4><ul><li><a href={SITE.instagram} rel="noopener" target="_blank">Instagram</a></li></ul></div>
       </div>
       <div class="footer__legal">

@@ -1,11 +1,12 @@
 ---
+import { u } from "../config";
 import { ESTADO_LABEL, money, slugify, fotoDe, type Product } from "../lib/catalog";
 interface Props {
   p: Product;
   order?: number; // posición en la planilla, para ordenar por "Novedades"
 }
 const { p, order = 0 } = Astro.props;
-const href = `/producto/${p.slug}/`;
+const href = u(`/producto/${p.slug}/`);
 const out = p.estado === "agotado";
 const foto = fotoDe(p, 600);
 // texto de búsqueda sin tildes ni mayúsculas
@@ -29,7 +30,7 @@ const search = [p.nombre, p.marca, p.categoria, p.descripcion]
   data-search={search}
 >
   <a class="tile__media" href={href} tabindex="-1" aria-hidden="true">
-    <span class={`shop-ph ph--${slugify(p.categoria)}`}><b>{p.marca || "Kiki's"}</b><small>{p.categoria}</small><img src="/kiki/kiki-retrato-96.webp" alt="" width="36" height="36" loading="lazy" /></span>
+    <span class={`shop-ph ph--${slugify(p.categoria)}`}><b>{p.marca || "Kiki's"}</b><small>{p.categoria}</small><img src={u("/kiki/kiki-retrato-96.webp")} alt="" width="36" height="36" loading="lazy" /></span>
     {foto && <img class="shop-photo" data-photo src={foto} alt="" width="600" height="600" loading="lazy" decoding="async" />}
   </a>
   <div class="tile__head">

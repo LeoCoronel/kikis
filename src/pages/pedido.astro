@@ -3,14 +3,14 @@ import Base from "../layouts/Base.astro";
 import Nav from "../components/Nav.astro";
 import Footer from "../components/Footer.astro";
 import { loadCatalog, loadCombos } from "../lib/catalog";
-import { SITE } from "../config";
+import { SITE, u } from "../config";
 
 const all = await loadCatalog();
 const combos = await loadCombos();
 // Precios y disponibilidad vigentes, para refrescar lo guardado en el navegador
 const prices = {
-  ...Object.fromEntries(all.map((p) => [p.id, { name: p.nombre, brand: p.marca, price: p.precio, estado: p.estado, url: `/producto/${p.slug}/` }])),
-  ...Object.fromEntries(combos.map((c) => [c.id, { name: c.nombre, brand: "", price: c.precio, estado: c.estado, url: `/combo/${c.slug}/` }])),
+  ...Object.fromEntries(all.map((p) => [p.id, { name: p.nombre, brand: p.marca, price: p.precio, estado: p.estado, url: u(`/producto/${p.slug}/`) }])),
+  ...Object.fromEntries(combos.map((c) => [c.id, { name: c.nombre, brand: "", price: c.precio, estado: c.estado, url: u(`/combo/${c.slug}/`) }])),
 };
 const waHref = `https://wa.me/${SITE.whatsapp}`;
 ---
@@ -19,7 +19,7 @@ const waHref = `https://wa.me/${SITE.whatsapp}`;
 <main id="top">
   <div class="page wrap" data-order>
     <nav class="crumbs" aria-label="Ubicación">
-      <a href="/">Inicio</a><span aria-hidden="true">/</span><span>Mi pedido</span>
+      <a href={u("/")}>Inicio</a><span aria-hidden="true">/</span><span>Mi pedido</span>
     </nav>
     <div class="page-head">
       <h1>Tu pedido</h1>
@@ -32,8 +32,8 @@ const waHref = `https://wa.me/${SITE.whatsapp}`;
         <h2 class="order-card__title">Tus productos</h2>
         <div class="order-empty" data-order-empty>
           <p>Todavía no sumaste productos.</p>
-          <a class="link" href="/tienda/">Ver la tienda</a>
-          <img class="is-standin" src="/kiki/kiki-durmiendo-960.webp" srcset="/kiki/kiki-durmiendo-480.webp 480w, /kiki/kiki-durmiendo-960.webp 960w" sizes="(max-width: 639px) 342px, 560px" alt="" width="960" height="784">
+          <a class="link" href={u("/tienda/")}>Ver la tienda</a>
+          <img class="is-standin" src={u("/kiki/kiki-durmiendo-960.webp")} srcset={`${u("/kiki/kiki-durmiendo-480.webp")} 480w, ${u("/kiki/kiki-durmiendo-960.webp")} 960w`} sizes="(max-width: 639px) 342px, 560px" alt="" width="960" height="784">
         </div>
         <ul class="rows order-list" data-order-list hidden></ul>
         <p class="order-total" data-order-total hidden><span>Total</span><span data-total>$0</span></p>

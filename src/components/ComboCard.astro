@@ -1,11 +1,12 @@
 ---
+import { u } from "../config";
 import { ESTADO_LABEL, money, fotoDe, type Combo } from "../lib/catalog";
 interface Props {
   c: Combo;
   span?: 3 | 4;
 }
 const { c, span = 4 } = Astro.props;
-const href = `/combo/${c.slug}/`;
+const href = u(`/combo/${c.slug}/`);
 const out = c.estado === "agotado";
 const hayTonos = c.items.some((it) => it.product.tonos.length > 0);
 const foto = fotoDe(c, 600);
@@ -22,7 +23,7 @@ const incluye = c.items.map((it) => (it.qty > 1 ? `${it.qty}x ${it.product.nombr
   data-estado={c.estado}
 >
   <a class="tile__media" href={href} tabindex="-1" aria-hidden="true">
-    <span class="shop-ph ph--combos"><b>Combo</b><small>{c.items.length === 1 ? "Pack" : `${c.items.length} productos`}</small><img src="/kiki/kiki-retrato-96.webp" alt="" width="36" height="36" loading="lazy" /></span>
+    <span class="shop-ph ph--combos"><b>Combo</b><small>{c.items.length === 1 ? "Pack" : `${c.items.length} productos`}</small><img src={u("/kiki/kiki-retrato-96.webp")} alt="" width="36" height="36" loading="lazy" /></span>
     {foto && <img class="shop-photo" data-photo src={foto} alt="" width="600" height="600" loading="lazy" decoding="async" />}
   </a>
   <div class="tile__head">

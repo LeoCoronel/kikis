@@ -4,7 +4,7 @@ import Nav from "../components/Nav.astro";
 import Footer from "../components/Footer.astro";
 import ComboCard from "../components/ComboCard.astro";
 import { loadCatalog, loadCombos, categoriesOf, CATEGORY_KIKI } from "../lib/catalog";
-import { SITE } from "../config";
+import { SITE, u } from "../config";
 
 const all = await loadCatalog();
 const categories = categoriesOf(all).filter((c) => c.slug !== "combos").slice(0, 4);
@@ -28,11 +28,11 @@ const zones = SITE.zones.join(", ").replace(/, ([^,]*)$/, " y $1");
         <h1 id="hero-h">Kiki's makeup</h1>
         <p class="home-hero__lead">Maquillaje y skincare en San Miguel.</p>
         <div class="btn-row">
-          <a class="btn btn--primary" href="/tienda/">Comprar ahora</a>
+          <a class="btn btn--primary" href={u("/tienda/")}>Comprar ahora</a>
         </div>
       </div>
       <div class="home-hero__art span-6">
-        <img src="/kiki/kiki-saluda-960.webp" srcset="/kiki/kiki-saluda-480.webp 480w, /kiki/kiki-saluda-960.webp 960w" sizes="(max-width: 639px) 300px, (max-width: 1023px) 420px, 520px" alt="Kiki, la gata de la tienda, saludando" width="960" height="1076" fetchpriority="high">
+        <img src={u("/kiki/kiki-saluda-960.webp")} srcset={`${u("/kiki/kiki-saluda-480.webp")} 480w, ${u("/kiki/kiki-saluda-960.webp")} 960w`} sizes="(max-width: 639px) 300px, (max-width: 1023px) 420px, 520px" alt="Kiki, la gata de la tienda, saludando" width="960" height="1076" fetchpriority="high">
       </div>
     </div>
   </section>
@@ -45,9 +45,9 @@ const zones = SITE.zones.join(", ").replace(/, ([^,]*)$/, " y $1");
       <div class="grid">
         {
           categories.map((c) => (
-            <a class="tile span-3 cat-tile" href={`/tienda/${c.slug}/`}>
+            <a class="tile span-3 cat-tile" href={u(`/tienda/${c.slug}/`)}>
               <div class="tile__media">
-                <img class="is-standin" src={`/kiki/kiki-${CATEGORY_KIKI[c.slug] ?? "retrato"}-480.webp`} alt="" width="480" height="480" loading="lazy" />
+                <img class="is-standin" src={u(`/kiki/kiki-${CATEGORY_KIKI[c.slug] ?? "retrato"}-480.webp`)} alt="" width="480" height="480" loading="lazy" />
               </div>
               <div class="tile__head"><h3>{c.nombre}</h3><span class="tile__price">{c.total}</span></div>
             </a>
@@ -66,7 +66,7 @@ const zones = SITE.zones.join(", ").replace(/, ([^,]*)$/, " y $1");
               <h2 id="destacados-h">Los combos más pedidos</h2>
               <p>Salen más baratos que comprar cada producto por separado.</p>
             </div>
-            <a class="link" href="/combos/">Ver todos los combos</a>
+            <a class="link" href={u("/combos/")}>Ver todos los combos</a>
           </div>
           <div class="grid">
             {picks.map((c) => <ComboCard c={c} />)}
@@ -90,7 +90,7 @@ const zones = SITE.zones.join(", ").replace(/, ([^,]*)$/, " y $1");
         </ul>
       </div>
       <div class="frame frame--photo shop-frame span-6 start-7">
-        <img class="frame__img is-standin" src="/kiki/kiki-corazon-960.webp" srcset="/kiki/kiki-corazon-480.webp 480w, /kiki/kiki-corazon-960.webp 960w" sizes="(max-width: 639px) 342px, (max-width: 1023px) 672px, 628px" alt="Kiki abrazando un corazón" width="960" height="1078" loading="lazy">
+        <img class="frame__img is-standin" src={u("/kiki/kiki-corazon-960.webp")} srcset={`${u("/kiki/kiki-corazon-480.webp")} 480w, ${u("/kiki/kiki-corazon-960.webp")} 960w`} sizes="(max-width: 639px) 342px, (max-width: 1023px) 672px, 628px" alt="Kiki abrazando un corazón" width="960" height="1078" loading="lazy">
       </div>
     </div>
   </section>
@@ -106,19 +106,19 @@ const zones = SITE.zones.join(", ").replace(/, ([^,]*)$/, " y $1");
           <span class="step-num" aria-hidden="true">1</span>
           <h3>Elegí lo que te gusta</h3>
           <p>Mirá los tonos, fijate qué hay disponible y sumalo a tu pedido.</p>
-          <div class="panel shop-panel"><img class="frame__img is-standin" src="/kiki/kiki-bolsa-960.webp" srcset="/kiki/kiki-bolsa-480.webp 480w, /kiki/kiki-bolsa-960.webp 960w" sizes="(max-width: 639px) 342px, 410px" alt="" width="960" height="1120" loading="lazy"></div>
+          <div class="panel shop-panel"><img class="frame__img is-standin" src={u("/kiki/kiki-bolsa-960.webp")} srcset={`${u("/kiki/kiki-bolsa-480.webp")} 480w, ${u("/kiki/kiki-bolsa-960.webp")} 960w`} sizes="(max-width: 639px) 342px, 410px" alt="" width="960" height="1120" loading="lazy"></div>
         </article>
         <article class="card card--row card--open span-4 m-nolift">
           <span class="step-num" aria-hidden="true">2</span>
           <h3>Mandanos tu pedido</h3>
           <p>Se arma solo un mensaje con tu lista y el total. Solo falta enviarlo.</p>
-          <div class="panel shop-panel"><img class="frame__img is-standin" src="/kiki/kiki-carrito-960.webp" srcset="/kiki/kiki-carrito-480.webp 480w, /kiki/kiki-carrito-960.webp 960w" sizes="(max-width: 639px) 342px, 410px" alt="" width="960" height="1200" loading="lazy"></div>
+          <div class="panel shop-panel"><img class="frame__img is-standin" src={u("/kiki/kiki-carrito-960.webp")} srcset={`${u("/kiki/kiki-carrito-480.webp")} 480w, ${u("/kiki/kiki-carrito-960.webp")} 960w`} sizes="(max-width: 639px) 342px, 410px" alt="" width="960" height="1200" loading="lazy"></div>
         </article>
         <article class="card card--row card--open span-4 m-nolift">
           <span class="step-num" aria-hidden="true">3</span>
           <h3>Coordinamos la entrega</h3>
           <p>Entregamos en San Miguel, Moreno y José C. Paz. Pagás con Mercado Pago, transferencia o efectivo.</p>
-          <div class="panel shop-panel"><img class="frame__img is-standin" src="/kiki/kiki-caminando-960.webp" srcset="/kiki/kiki-caminando-480.webp 480w, /kiki/kiki-caminando-960.webp 960w" sizes="(max-width: 639px) 342px, 410px" alt="" width="960" height="817" loading="lazy"></div>
+          <div class="panel shop-panel"><img class="frame__img is-standin" src={u("/kiki/kiki-caminando-960.webp")} srcset={`${u("/kiki/kiki-caminando-480.webp")} 480w, ${u("/kiki/kiki-caminando-960.webp")} 960w`} sizes="(max-width: 639px) 342px, 410px" alt="" width="960" height="817" loading="lazy"></div>
         </article>
       </div>
     </div>

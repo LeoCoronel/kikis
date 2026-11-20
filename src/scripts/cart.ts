@@ -104,7 +104,7 @@ function renderOrder() {
       const sub = [l.brand, l.tono].filter(Boolean).join(" · ");
       const out = live[l.id]?.estado === "agotado";
       return `<li class="order-item">
-        <span class="rows__name"><a href="${esc(l.url ?? "/tienda/")}">${esc(l.name)}</a>${sub ? `<small>${esc(sub)}${out ? " · Agotado" : ""}</small>` : out ? "<small>Agotado</small>" : ""}</span>
+        <span class="rows__name"><a href="${esc(l.url ?? import.meta.env.BASE_URL + "tienda/")}">${esc(l.name)}</a>${sub ? `<small>${esc(sub)}${out ? " · Agotado" : ""}</small>` : out ? "<small>Agotado</small>" : ""}</span>
         <span class="order-qty">
           <button type="button" data-dec="${i}" aria-label="Quitar uno de ${esc(l.name)}">−</button>
           <span aria-live="polite">${l.qty}</span>
