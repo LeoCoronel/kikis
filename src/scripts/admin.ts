@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { GoogleAuthProvider, getAuth, onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
-import { collection, deleteDoc, doc, getDocs, getFirestore, setDoc, writeBatch } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDoc, getDocs, getFirestore, setDoc, writeBatch } from "firebase/firestore";
 import { FIREBASE } from "../config";
 import { parseCSV } from "../lib/csv";
 
@@ -68,6 +68,19 @@ onAuthStateChanged(auth, async (user) => {
   $("[data-app]").hidden = !user;
   $("[data-user]").hidden = !user;
   if (!user) return;
+  // ¿Esta cuenta está autorizada? Las reglas de Firestore solo dejan leer este documento a los admins.
+  try {
+    await getDoc(doc(db, "_acceso", "ping"));
+  } catch (e) {
+    if (((e as { code?: string }).code ?? "").includes("permission-denied")) {
+      const mail = user.email ?? "esa cuenta";
+      await signOut(auth);
+      const err = $("[data-login-error]");
+      err.textContent = `${mail} no tiene permiso para editar la tienda. Probá con otra cuenta de Google.`;
+      err.hidden = false;
+      return;
+    }
+  }
   $("[data-email]").textContent = user.email ?? "";
   await refresh();
 });

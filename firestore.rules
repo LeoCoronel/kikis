@@ -24,6 +24,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // El panel lo consulta para saber si la cuenta que entró es admin.
+    match /_acceso/{id} {
+      allow get: if isAdmin();
+    }
+
     // Todo lo demás, cerrado.
     match /{document=**} {
       allow read, write: if false;
