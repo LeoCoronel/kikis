@@ -1,4 +1,5 @@
-import { SITE, photoUrl } from "../config";
+import { photoUrl } from "../config";
+import { readCollection } from "./firestore";
 
 export type Estado = "hay" | "pedido" | "tanda" | "agotado";
 
@@ -57,58 +58,8 @@ export const slugify = (s: string) =>
 /** URL de la foto de un producto o combo ("" si no hay cuenta de fotos). */
 export const fotoDe = (x: { fotoArchivo: string }, width = 600) => photoUrl(x.fotoArchivo, width);
 
-/** CSV con comillas ("a,b" y "" dentro de un campo), saltos de línea incluidos. */
-function parseCSV(text: string): Record<string, string>[] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let cur = "";
-  let quoted = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (quoted) {
-      if (c === '"' && text[i + 1] === '"') {
-        cur += '"';
-        i++;
-      } else if (c === '"') quoted = false;
-      else cur += c;
-    } else if (c === '"') quoted = true;
-    else if (c === ",") {
-      row.push(cur);
-      cur = "";
-    } else if (c === "\n" || c === "\r") {
-      if (c === "\r" && text[i + 1] === "\n") i++;
-      row.push(cur);
-      rows.push(row);
-      row = [];
-      cur = "";
-    } else cur += c;
-  }
-  if (cur || row.length) {
-    row.push(cur);
-    rows.push(row);
-  }
-  const head = (rows.shift() ?? []).map((h) => h.trim().toLowerCase());
-  return rows
-    .filter((r) => r.some((x) => x.trim()))
-    .map((r) => Object.fromEntries(head.map((h, i) => [h, (r[i] ?? "").trim()])));
-}
-
 const isYes = (v: string) => /^(si|sí|1|x|true)$/i.test(v.trim());
 const digits = (v: string) => Number((v || "0").replace(/\D/g, "")) || 0;
-
-async function fetchCSV(url: string, what: string): Promise<string> {
-  try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text = await res.text();
-    // Una planilla privada devuelve una página de inicio de sesión, no un CSV.
-    if (/<html/i.test(text.slice(0, 500))) throw new Error("la planilla no es pública");
-    return text;
-  } catch (e) {
-    // En una construcción de producción no se publica un catálogo vacío.
-    throw new Error(`No se pudo leer la hoja ${what} de la planilla: ${(e as Error).message}`);
-  }
-}
 
 function toProduct(r: Record<string, string>, i: number): Product {
   const estado = (r.estado || "hay").toLowerCase() as Estado;
@@ -137,7 +88,7 @@ function toCombo(r: Record<string, string>, i: number, byId: Map<string, Product
     const pid = (m?.[1] ?? part).trim();
     const qty = Math.max(1, Number(m?.[2] ?? 1));
     const product = byId.get(pid);
-    if (!product) throw new Error(`El combo "${id}" usa el id "${pid}", que no existe en la hoja Productos`);
+    if (!product) throw new Error(`El combo "${id}" usa el id "${pid}", que no existe en la colección productos`);
     items.push({ product, qty });
   }
   if (!items.length) throw new Error(`El combo "${id}" no tiene productos`);
@@ -166,23 +117,23 @@ function toCombo(r: Record<string, string>, i: number, byId: Map<string, Product
 function checkUnique(items: { id: string; slug: string }[], what: string) {
   const seen = new Set<string>();
   for (const x of items) {
-    if (seen.has(x.slug)) throw new Error(`El id "${x.id}" está repetido en la hoja ${what}`);
+    if (seen.has(x.slug)) throw new Error(`El id "${x.id}" está repetido en la colección ${what}`);
     seen.add(x.slug);
   }
 }
 
 let cache: Promise<{ products: Product[]; combos: Combo[] }> | undefined;
 
-/** Lee la planilla una sola vez por construcción. */
+/** Lee Firestore una sola vez por construcción. */
 function load() {
   cache ??= (async () => {
-    const products = parseCSV(await fetchCSV(SITE.sheetProductos, "Productos")).map(toProduct);
-    checkUnique(products, "Productos");
+    const products = (await readCollection("productos")).map(toProduct);
+    checkUnique(products, "productos");
     const byId = new Map(products.map((p) => [p.id, p]));
-    const combos = parseCSV(await fetchCSV(SITE.sheetCombos, "Combos")).map((r, i) => toCombo(r, i, byId));
-    checkUnique(combos, "Combos");
+    const combos = (await readCollection("combos")).map((r, i) => toCombo(r, i, byId));
+    checkUnique(combos, "combos");
     const clash = combos.find((c) => byId.has(c.id));
-    if (clash) throw new Error(`El id "${clash.id}" está en Productos y en Combos: tienen que ser distintos`);
+    if (clash) throw new Error(`El id "${clash.id}" está en productos y en combos: tienen que ser distintos`);
     return { products, combos };
   })();
   return cache;

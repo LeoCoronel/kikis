@@ -1,0 +1,32 @@
+rules_version = '2';
+
+// Pegar en Firebase console → Firestore Database → Reglas → Publicar.
+// Cualquiera puede LEER el catálogo (lo necesita el sitio al construirse).
+// Solo las cuentas de Google de esta lista pueden ESCRIBIR.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in [
+          'REEMPLAZAR_CON_EL_GMAIL_DE_LA_DUENA@gmail.com'
+        ];
+    }
+
+    match /productos/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /combos/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Todo lo demás, cerrado.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

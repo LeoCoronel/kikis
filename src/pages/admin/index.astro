@@ -1,0 +1,112 @@
+---
+import Base from "../../layouts/Base.astro";
+import { u } from "../../config";
+---
+<Base title="Panel · Kiki's makeup" description="Panel privado para cargar productos y combos." noindex>
+<link rel="stylesheet" href={u("/admin.css")} />
+
+<header class="adm-top">
+  <div class="wrap adm-top__in">
+    <a class="adm-brand" href={u("/")}>
+      <img src={u("/kiki/kiki-retrato-96.webp")} alt="" width="32" height="32" />
+      <span>Kiki's makeup</span>
+      <span class="badge">Panel</span>
+    </a>
+    <div class="adm-user" data-user hidden>
+      <span class="adm-user__mail" data-email></span>
+      <a class="link adm-user__shop" href={u("/tienda/")}>Ver tienda</a>
+      <button class="btn btn--secondary btn--sm" type="button" data-signout>Salir</button>
+    </div>
+  </div>
+</header>
+
+<main id="top" class="adm">
+  <div class="wrap">
+
+    <section class="adm-login" data-login>
+      <div class="adm-login__copy">
+        <h1>Panel de la tienda</h1>
+        <p>Cargá productos, armá combos y subí fotos. Entrá con la cuenta de Google autorizada.</p>
+        <button class="btn btn--primary" type="button" data-signin>Ingresar con Google</button>
+        <p class="adm-error" data-login-error role="alert" hidden></p>
+      </div>
+      <img src={u("/kiki/kiki-feliz-480.webp")} alt="" width="320" height="320" />
+    </section>
+
+    <div data-app hidden>
+      <div class="adm-head">
+        <h1>Catálogo</h1>
+        <p>Los cambios se publican solos en menos de una hora.</p>
+      </div>
+
+      <div class="adm-stats">
+        <div class="card"><b data-stat="productos">0</b><span>Productos</span></div>
+        <div class="card"><b data-stat="combos">0</b><span>Combos</span></div>
+        <div class="card"><b data-stat="mas">0<small>/6</small></b><span>Más pedidos en la portada</span></div>
+      </div>
+
+      <div class="adm-tabs" role="tablist" aria-label="Secciones">
+        <button role="tab" type="button" data-tab="productos" aria-selected="true">Productos</button>
+        <button role="tab" type="button" data-tab="combos" aria-selected="false">Combos</button>
+        <button role="tab" type="button" data-tab="importar" aria-selected="false">Importar planilla</button>
+      </div>
+
+      <section data-panel="productos">
+        <div class="adm-toolbar">
+          <label class="field adm-search"><span class="sr-only">Buscar producto</span><input type="search" data-filter="productos" placeholder="Buscar por nombre, marca o código" autocomplete="off" /></label>
+          <button class="btn btn--primary" type="button" data-new="productos">Nuevo producto</button>
+        </div>
+        <div class="adm-list" data-list="productos"></div>
+      </section>
+
+      <section data-panel="combos" hidden>
+        <div class="adm-toolbar">
+          <label class="field adm-search"><span class="sr-only">Buscar combo</span><input type="search" data-filter="combos" placeholder="Buscar combo" autocomplete="off" /></label>
+          <button class="btn btn--primary" type="button" data-new="combos">Nuevo combo</button>
+        </div>
+        <div class="adm-list" data-list="combos"></div>
+      </section>
+
+      <section data-panel="importar" hidden>
+        <div class="card adm-import">
+          <h2>Pasar la planilla a la base</h2>
+          <ol class="adm-steps">
+            <li>En la planilla, descargá cada hoja: Archivo → Descargar → Valores separados por comas.</li>
+            <li>Elegí los archivos acá abajo. Si un código ya existe, se actualiza.</li>
+            <li>Las fotos se pegan después, producto por producto.</li>
+          </ol>
+          <div class="adm-files">
+            <label class="adm-file"><span>Hoja Productos</span><input type="file" accept=".csv,text/csv" data-import="productos" /></label>
+            <label class="adm-file"><span>Hoja Combos</span><input type="file" accept=".csv,text/csv" data-import="combos" /></label>
+          </div>
+          <p class="adm-import__info" data-import-info></p>
+          <div class="btn-row"><button class="btn btn--primary" type="button" data-import-go disabled>Importar</button></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<p class="adm-toast" data-msg role="status" aria-live="polite" hidden></p>
+
+<dialog class="adm-drawer" data-dialog aria-labelledby="adm-form-title">
+  <form method="dialog" class="adm-drawer__form" data-form novalidate>
+    <header class="adm-drawer__head">
+      <h2 id="adm-form-title" data-form-title></h2>
+      <button class="adm-x" type="button" data-cancel aria-label="Cerrar">×</button>
+    </header>
+    <div class="adm-drawer__body" data-fields></div>
+    <footer class="adm-drawer__foot">
+      <p class="adm-error" data-form-error role="alert" hidden></p>
+      <div class="btn-row">
+        <button class="btn btn--primary" type="submit" data-save>Guardar</button>
+        <button class="btn btn--secondary" type="button" data-cancel-2>Cancelar</button>
+        <button class="adm-danger" type="button" data-delete hidden>Borrar</button>
+      </div>
+    </footer>
+  </form>
+</dialog>
+<script>
+  import "../../scripts/admin";
+</script>
+</Base>
