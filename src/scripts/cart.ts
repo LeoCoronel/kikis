@@ -1,4 +1,6 @@
 // Pedido compartido por todas las páginas: se guarda en el navegador y se cierra por WhatsApp.
+import { FIREBASE, photoUrl } from "../config";
+
 const KEY = "kiki-pedido";
 const MAX_URL_TEXT = 1700; // más largo, el enlace de WhatsApp puede cortarse
 
@@ -133,7 +135,27 @@ document.addEventListener("click", (e) => {
 });
 
 const form = $<HTMLFormElement>("[data-order-form]");
+
+// El número no está en el código ni en el HTML: se pide a Firestore al abrir la página del pedido.
+let phone = "";
+async function loadPhone() {
+  try {
+    const res = await fetch(`https://firestore.googleapis.com/v1/projects/${FIREBASE.projectId}/databases/(default)/documents/config/contacto`);
+    if (res.ok) phone = String((await res.json()).fields?.whatsapp?.stringValue ?? "").replace(/\D/g, "");
+  } catch {
+    /* sin conexión: se reintenta al enviar */
+  }
+}
+if (form) loadPhone();
+
 form?.addEventListener("submit", (e) => {
+  if (!phone) {
+    e.preventDefault();
+    if (note) note.textContent = "No pudimos abrir WhatsApp. Revisá tu conexión y tocá el botón otra vez.";
+    loadPhone();
+    return;
+  }
+  form.action = `https://wa.me/${phone}`;
   const data = new FormData(form);
   const who = String(data.get("nombre") || "").trim();
   const comment = String(data.get("comentario") || "").trim();
@@ -187,3 +209,51 @@ document.addEventListener(
   },
   true,
 );
+
+/* ------------------------------------------------------------ fotos por tono */
+function showPhoto(media: HTMLElement, file: string, alt: string) {
+  let img = $<HTMLImageElement>("img[data-photo]", media);
+  const width = Number(media.dataset.w) || 600;
+  const src = photoUrl(file, width);
+  if (!src) return img?.remove();
+  if (!img) {
+    img = document.createElement("img");
+    img.className = "shop-photo";
+    img.setAttribute("data-photo", "");
+    img.alt = alt;
+    img.width = img.height = width;
+    media.appendChild(img);
+  }
+  img.src = src;
+}
+
+document.addEventListener("change", (e) => {
+  const input = e.target as HTMLInputElement;
+  if (!input.matches?.("input[data-tone-input][data-fotos]")) return;
+  const item = input.closest<HTMLElement>("[data-item]");
+  const media = item && $("[data-media]", item);
+  if (!item || !media) return;
+  let fotos: string[] = [];
+  try {
+    fotos = JSON.parse(input.dataset.fotos || "[]");
+  } catch {
+    fotos = [];
+  }
+  const alt = `${item.dataset.name ?? ""} ${input.value}`.trim();
+  showPhoto(media, fotos[0] ?? "", alt);
+  const thumbs = $("[data-thumbs]", item);
+  if (!thumbs) return;
+  thumbs.hidden = fotos.length < 2;
+  thumbs.innerHTML = fotos
+    .map((f, i) => `<button type="button" class="thumb" data-thumb="${esc(f)}" aria-pressed="${i === 0}" aria-label="Foto ${i + 1}"><img src="${esc(photoUrl(f, 160))}" alt="" width="80" height="80"></button>`)
+    .join("");
+});
+
+document.addEventListener("click", (e) => {
+  const thumb = (e.target as HTMLElement).closest<HTMLElement>("[data-thumb]");
+  const item = thumb?.closest<HTMLElement>("[data-item]");
+  const media = item && $("[data-media]", item);
+  if (!thumb || !item || !media) return;
+  showPhoto(media, thumb.dataset.thumb!, item.dataset.name ?? "");
+  $$("[data-thumb]", item).forEach((t) => t.setAttribute("aria-pressed", String(t === thumb)));
+});

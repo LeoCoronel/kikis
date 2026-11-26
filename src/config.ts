@@ -12,9 +12,7 @@ export const FIREBASE = {
 
 export const SITE = {
   name: "Kiki's makeup",
-  // MOCK: número de WhatsApp de relleno (código de país + número, sin signos).
-  // Reemplazar por el real de la dueña antes de publicar. Es el único lugar donde se escribe.
-  whatsapp: "5491100000000",
+  // El número de WhatsApp NO va acá: se carga en el panel (/admin/ → Ajustes) y vive en Firestore.
   instagram: "https://instagram.com/kikismakeup__",
   // Cloudinary: ya no hace falta. En el panel (/admin/) se pega la URL de cada foto.
   zones: ["San Miguel", "Moreno", "José C. Paz"],

@@ -6,6 +6,8 @@ type FsValue = {
   doubleValue?: number;
   booleanValue?: boolean;
   nullValue?: null;
+  arrayValue?: { values?: FsValue[] };
+  mapValue?: { fields?: Record<string, FsValue> };
 };
 
 interface FsDoc {
@@ -13,13 +15,21 @@ interface FsDoc {
   fields?: Record<string, FsValue>;
 }
 
-/** Un valor de Firestore pasado a texto, que es lo que espera el modelo del catálogo. */
+/** Un valor de Firestore como valor común de JavaScript. */
+function plain(v: FsValue): unknown {
+  if (v.arrayValue) return (v.arrayValue.values ?? []).map(plain);
+  if (v.mapValue) return Object.fromEntries(Object.entries(v.mapValue.fields ?? {}).map(([k, x]) => [k, plain(x)]));
+  return asText(v);
+}
+
+/** Un valor de Firestore pasado a texto, que es lo que espera el modelo del catálogo (listas: JSON). */
 function asText(v: FsValue | undefined): string {
   if (!v) return "";
   if (v.stringValue !== undefined) return v.stringValue;
   if (v.integerValue !== undefined) return v.integerValue;
   if (v.doubleValue !== undefined) return String(v.doubleValue);
   if (v.booleanValue !== undefined) return v.booleanValue ? "si" : "";
+  if (v.arrayValue || v.mapValue) return JSON.stringify(plain(v));
   return "";
 }
 

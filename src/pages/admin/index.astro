@@ -49,6 +49,7 @@ import { u } from "../../config";
         <button role="tab" type="button" data-tab="productos" aria-selected="true">Productos</button>
         <button role="tab" type="button" data-tab="combos" aria-selected="false">Combos</button>
         <button role="tab" type="button" data-tab="importar" aria-selected="false">Importar planilla</button>
+        <button role="tab" type="button" data-tab="ajustes" aria-selected="false">Ajustes</button>
       </div>
 
       <section data-panel="productos">
@@ -65,6 +66,16 @@ import { u } from "../../config";
           <button class="btn btn--primary" type="button" data-new="combos">Nuevo combo</button>
         </div>
         <div class="adm-list" data-list="combos"></div>
+      </section>
+
+      <section data-panel="ajustes" hidden>
+        <form class="card adm-import" data-settings novalidate>
+          <h2>WhatsApp de los pedidos</h2>
+          <p class="adm-note">Con código de país y de área, sin el 15. El número se guarda en la base y no queda escrito en el código del sitio.</p>
+          <p class="adm-error" data-phone-warn hidden>Todavía no hay un número cargado: los clientes no pueden enviar pedidos.</p>
+          <label class="field"><span>Número</span><input type="tel" data-phone inputmode="tel" autocomplete="off" placeholder="549 + área + número" /></label>
+          <div class="btn-row"><button class="btn btn--primary" type="submit">Guardar número</button></div>
+        </form>
       </section>
 
       <section data-panel="importar" hidden>

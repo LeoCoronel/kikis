@@ -12,7 +12,6 @@ const prices = {
   ...Object.fromEntries(all.map((p) => [p.id, { name: p.nombre, brand: p.marca, price: p.precio, estado: p.estado, url: u(`/producto/${p.slug}/`) }])),
   ...Object.fromEntries(combos.map((c) => [c.id, { name: c.nombre, brand: "", price: c.precio, estado: c.estado, url: u(`/combo/${c.slug}/`) }])),
 };
-const waHref = `https://wa.me/${SITE.whatsapp}`;
 ---
 <Base title="Tu pedido · Kiki's makeup" description="Revisá tu pedido y enviálo por WhatsApp: confirmamos disponibilidad y entrega.">
 <Nav />
@@ -38,7 +37,7 @@ const waHref = `https://wa.me/${SITE.whatsapp}`;
         <ul class="rows order-list" data-order-list hidden></ul>
         <p class="order-total" data-order-total hidden><span>Total</span><span data-total>$0</span></p>
       </div>
-      <form class="card card--plan span-6 start-7 m-nolift" action={waHref} method="get" target="_blank" data-order-form>
+      <form class="card card--plan span-6 start-7 m-nolift" action="https://wa.me/" method="get" target="_blank" data-order-form>
         <h2 class="order-card__title">Tus datos</h2>
         <div class="form">
           <label class="field">Nombre<input name="nombre" type="text" autocomplete="given-name" required></label>

@@ -3,6 +3,11 @@ import { readCollection } from "./firestore";
 
 export type Estado = "hay" | "pedido" | "tanda" | "agotado";
 
+export interface Variante {
+  nombre: string;
+  fotos: string[];
+}
+
 export interface Product {
   id: string;
   slug: string; // para la URL: /producto/<slug>/
@@ -13,8 +18,10 @@ export interface Product {
   ingredientes: string;
   precio: number;
   tonos: string[];
+  variantes: Variante[]; // un tono con sus fotos
+  fotos: string[]; // fotos generales (sirven para los tonos sin fotos propias)
   estado: Estado;
-  fotoArchivo: string; // nombre del archivo en Cloudinary (la columna foto, o el id)
+  fotoArchivo: string; // la foto principal
 }
 
 export interface ComboItem {
@@ -61,9 +68,27 @@ export const fotoDe = (x: { fotoArchivo: string }, width = 600) => photoUrl(x.fo
 const isYes = (v: string) => /^(si|sí|1|x|true)$/i.test(v.trim());
 const digits = (v: string) => Number((v || "0").replace(/\D/g, "")) || 0;
 
+const json = (v: string | undefined): unknown => {
+  try {
+    return v ? JSON.parse(v) : undefined;
+  } catch {
+    return undefined;
+  }
+};
+const urls = (v: unknown) => (Array.isArray(v) ? v.map(String).filter(Boolean) : []);
+
 function toProduct(r: Record<string, string>, i: number): Product {
   const estado = (r.estado || "hay").toLowerCase() as Estado;
   const id = r.id || `p${i + 1}`;
+  const guardadas = json(r.variantes);
+  let variantes: Variante[] = (Array.isArray(guardadas) ? guardadas : [])
+    .map((v) => ({ nombre: String(v?.nombre ?? "").trim(), fotos: urls(v?.fotos) }))
+    .filter((v) => v.nombre);
+  // cargas anteriores: solo los nombres de los tonos
+  if (!variantes.length)
+    variantes = (r.tonos || "").split("|").map((t) => t.trim()).filter(Boolean).map((nombre) => ({ nombre, fotos: [] }));
+  const propias = json(r.fotos);
+  const fotos = Array.isArray(propias) ? urls(propias) : urls(r.foto ? [r.foto.trim()] : []);
   return {
     id,
     slug: slugify(id) || `p${i + 1}`,
@@ -74,9 +99,11 @@ function toProduct(r: Record<string, string>, i: number): Product {
     ingredientes: r.ingredientes || "",
     // El CSV trae el precio formateado ("$9.500"): se queda solo con los dígitos.
     precio: digits(r.precio),
-    tonos: (r.tonos || "").split("|").map((t) => t.trim()).filter(Boolean),
+    tonos: variantes.map((v) => v.nombre),
+    variantes,
+    fotos,
     estado: estado in ESTADO_LABEL ? estado : "hay",
-    fotoArchivo: (r.foto || "").trim() || id,
+    fotoArchivo: fotos[0] ?? variantes.find((v) => v.fotos.length)?.fotos[0] ?? "",
   };
 }
 

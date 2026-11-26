@@ -24,6 +24,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Número de WhatsApp: la página del pedido lo lee de a un documento; solo los admins lo cambian.
+    match /config/contacto {
+      allow get: if true;
+      allow write: if isAdmin();
+    }
+
     // El panel lo consulta para saber si la cuenta que entró es admin.
     match /_acceso/{id} {
       allow get: if isAdmin();

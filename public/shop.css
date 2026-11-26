@@ -182,3 +182,17 @@ img.shop-photo { position: absolute; inset: 0; width: 100%; height: 100%; object
 .combo-part__head a { font-weight: 500; text-decoration: none; }
 .combo-part__head a:hover { text-decoration: underline; }
 .combo-part__head small { color: var(--muted); font-size: var(--t-small); }
+
+/* ============================================================ tonos en la tarjeta y galería */
+.tones--card { gap: 0; min-width: 0; }
+.tones--card .tones__row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; padding: 3px; margin: -3px; }
+.tones--card .tone { flex: none; }
+.tones--card .tone span { height: 32px; padding: 0 var(--s-3); font-size: 13px; white-space: nowrap; }
+/* el botón queda abajo, alineado entre tarjetas con y sin tonos */
+.shop-card__add { margin-top: auto; }
+.product__gallery { display: grid; gap: var(--s-3); align-content: start; min-width: 0; }
+.thumbs { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.thumbs[hidden] { display: none; }
+.thumb { width: 80px; height: 80px; padding: 0; border: 2px solid transparent; border-radius: var(--r-md); overflow: hidden; background: var(--surface); cursor: pointer; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb[aria-pressed="true"] { border-color: var(--ink); }

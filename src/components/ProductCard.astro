@@ -1,6 +1,6 @@
 ---
-import { u } from "../config";
-import { ESTADO_LABEL, money, slugify, fotoDe, type Product } from "../lib/catalog";
+import { u, photoUrl } from "../config";
+import { ESTADO_LABEL, money, slugify, type Product } from "../lib/catalog";
 interface Props {
   p: Product;
   order?: number; // posición en la planilla, para ordenar por "Novedades"
@@ -8,9 +8,11 @@ interface Props {
 const { p, order = 0 } = Astro.props;
 const href = u(`/producto/${p.slug}/`);
 const out = p.estado === "agotado";
-const foto = fotoDe(p, 600);
+// fotos de cada tono (o las generales si el tono no tiene)
+const fotosDe = (i: number) => (p.variantes[i]?.fotos.length ? p.variantes[i].fotos : p.fotos);
+const foto = photoUrl(p.variantes.length ? (fotosDe(0)[0] ?? p.fotoArchivo) : p.fotoArchivo, 600);
 // texto de búsqueda sin tildes ni mayúsculas
-const search = [p.nombre, p.marca, p.categoria, p.descripcion]
+const search = [p.nombre, p.marca, p.categoria, p.descripcion, ...p.tonos]
   .join(" ")
   .normalize("NFD")
   .replace(/[̀-ͯ]/g, "")
@@ -29,7 +31,7 @@ const search = [p.nombre, p.marca, p.categoria, p.descripcion]
   data-order={order}
   data-search={search}
 >
-  <a class="tile__media" href={href} tabindex="-1" aria-hidden="true">
+  <a class="tile__media" href={href} tabindex="-1" aria-hidden="true" data-media data-w="600">
     <span class={`shop-ph ph--${slugify(p.categoria)}`}><b>{p.marca || "Kiki's"}</b><small>{p.categoria}</small><img src={u("/kiki/kiki-retrato-96.webp")} alt="" width="36" height="36" loading="lazy" /></span>
     {foto && <img class="shop-photo" data-photo src={foto} alt="" width="600" height="600" loading="lazy" decoding="async" />}
   </a>
@@ -39,12 +41,19 @@ const search = [p.nombre, p.marca, p.categoria, p.descripcion]
   </div>
   <p class="tile__facts">{[p.marca, ESTADO_LABEL[p.estado]].filter(Boolean).join(" · ")}</p>
   {
-    out ? (
-      <button class="btn btn--secondary" type="button" disabled>Agotado</button>
-    ) : p.tonos.length > 0 ? (
-      <a class="btn btn--secondary" href={`${href}#tonos`}>Elegir tono</a>
-    ) : (
-      <button class="btn btn--secondary" type="button" data-add>Agregar al pedido</button>
+    p.variantes.length > 0 && (
+      <fieldset class="tones tones--card">
+        <legend class="sr-only">Tono de {p.nombre}</legend>
+        <div class="tones__row">
+          {p.variantes.map((v, i) => (
+            <label class="tone">
+              <input type="radio" name={`tono-${p.id}`} value={v.nombre} data-tone-input data-fotos={JSON.stringify(fotosDe(i))} checked={i === 0} />
+              <span>{v.nombre}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
     )
   }
+  <button class="btn btn--secondary shop-card__add" type="button" data-add disabled={out}>{out ? "Agotado" : "Agregar al pedido"}</button>
 </article>

@@ -5,6 +5,7 @@ import { FIREBASE } from "../config";
 import { parseCSV } from "../lib/csv";
 
 type Kind = "productos" | "combos";
+type Tab = Kind | "importar" | "ajustes";
 type Rec = { id: string; [k: string]: any };
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -17,7 +18,7 @@ const $$ = <T extends HTMLElement>(sel: string) => [...document.querySelectorAll
 
 const ESTADOS: Record<string, string> = { hay: "Hay disponible", pedido: "Por pedido", tanda: "Próxima tanda", agotado: "Agotado" };
 const data: Record<Kind, Rec[]> = { productos: [], combos: [] };
-let tab: Kind | "importar" = "productos";
+let tab: Tab = "productos";
 let editing: { kind: Kind; id: string | null } | null = null;
 
 const esc = (s: unknown) =>
@@ -49,8 +50,10 @@ $("[data-signin]").addEventListener("click", async () => {
     await signInWithPopup(auth, new GoogleAuthProvider());
   } catch (e) {
     const code = (e as { code?: string }).code ?? "";
-    if (code.includes("popup-closed") || code.includes("cancelled")) return;
-    err.textContent = code.includes("unauthorized-domain")
+    if (code.includes("cancelled")) return;
+    err.textContent = code.includes("popup-closed")
+      ? "Se cerró la ventana de Google. Si veía el error \"missing initial state\", abrí esta página directo en Chrome o Safari (no desde Instagram/WhatsApp), sin modo privado, y permití cookies de terceros para este sitio."
+      : code.includes("unauthorized-domain")
       ? "Este dominio no está autorizado en Firebase (Authentication → Configuración → Dominios autorizados)."
       : code.includes("popup-blocked")
         ? "El navegador bloqueó la ventana de Google. Permití las ventanas emergentes para este sitio y probá de nuevo."
@@ -95,6 +98,7 @@ async function refresh() {
     }
     renderList("productos");
     renderList("combos");
+    await loadSettings();
   } catch (e) {
     say(friendly(e));
   }
@@ -208,6 +212,74 @@ const photoField = (value: unknown) =>
     </div>`,
   );
 
+/* ---------- tonos y fotos ---------- */
+const photoRow = (url = "") => `<div class="adm-shot">
+    <img class="adm-thumb" alt="" ${https(url) ? `src="${esc(https(url))}"` : ""} />
+    <input type="url" data-shot value="${esc(url)}" placeholder="Pegá el enlace de la foto" aria-label="Enlace de la foto" />
+    <button type="button" data-shot-remove aria-label="Quitar foto">×</button>
+  </div>`;
+const photoList = (urls: string[]) => `<div class="adm-shots" data-shots>${(urls.length ? urls : [""]).map(photoRow).join("")}</div>
+  <button class="adm-more" type="button" data-shot-add>+ Otra foto</button>`;
+const variantCard = (nombre = "", fotos: string[] = []) => `<div class="adm-variant" data-variant>
+    <div class="adm-variant__head">
+      <input type="text" data-variant-name value="${esc(nombre)}" placeholder="Nombre del tono, ej. Rosa" aria-label="Nombre del tono" />
+      <button type="button" data-variant-remove>Quitar tono</button>
+    </div>
+    ${photoList(fotos)}
+  </div>`;
+
+/** Tonos y fotos generales guardados (acepta las cargas anteriores: tonos como texto y una sola foto). */
+function stored(r: Rec): { variantes: { nombre: string; fotos: string[] }[]; fotos: string[] } {
+  const variantes =
+    Array.isArray(r.variantes) && r.variantes.length
+      ? r.variantes
+      : String(r.tonos ?? "").split("|").filter(Boolean).map((nombre) => ({ nombre, fotos: [] }));
+  const fotos = Array.isArray(r.fotos) ? r.fotos : r.foto ? [r.foto] : [];
+  return { variantes, fotos };
+}
+const readShots = (box: Element) => [...box.querySelectorAll<HTMLInputElement>("[data-shot]")].map((i) => i.value.trim()).filter(Boolean);
+
+dialog.addEventListener("click", (e) => {
+  const t = e.target as HTMLElement;
+  if (t.matches("[data-variant-add]")) {
+    const box = dialog.querySelector("[data-variants]")!;
+    box.insertAdjacentHTML("beforeend", variantCard());
+    box.lastElementChild!.querySelector("input")!.focus();
+  }
+  if (t.matches("[data-variant-remove]")) t.closest("[data-variant]")!.remove();
+  if (t.matches("[data-shot-add]")) {
+    const box = t.previousElementSibling!;
+    box.insertAdjacentHTML("beforeend", photoRow());
+    box.lastElementChild!.querySelector("input")!.focus();
+  }
+  if (t.matches("[data-shot-remove]")) {
+    const row = t.closest(".adm-shot")!;
+    if (row.parentElement!.children.length > 1) row.remove();
+    else {
+      row.querySelector("input")!.value = "";
+      row.querySelector("img")!.removeAttribute("src");
+    }
+  }
+});
+dialog.addEventListener("input", (e) => {
+  const t = e.target as HTMLInputElement;
+  if (!t.matches("[data-shot]")) return;
+  const img = t.closest(".adm-shot")!.querySelector("img")!;
+  if (https(t.value)) img.src = https(t.value);
+  else img.removeAttribute("src");
+});
+// Pegar varios enlaces juntos los reparte en una fila para cada uno
+dialog.addEventListener("paste", (e) => {
+  const t = e.target as HTMLInputElement;
+  if (!t.matches("[data-shot]")) return;
+  const found = (e as ClipboardEvent).clipboardData?.getData("text").match(/https:\/\/[^\s,;]+/g) ?? [];
+  if (found.length < 2) return;
+  e.preventDefault();
+  const row = t.closest(".adm-shot")!;
+  row.insertAdjacentHTML("afterend", found.map(photoRow).join(""));
+  if (!t.value.trim()) row.remove();
+});
+
 function partRow(productId = "", qty = 1) {
   const opts = data.productos
     .map((p) => `<option value="${esc(p.id)}" ${p.id === productId ? "selected" : ""}>${esc(p.nombre || p.id)}</option>`)
@@ -255,9 +327,14 @@ function openForm(kind: Kind, id: string | null) {
           .map(([v, l]) => `<label class="tone"><input type="radio" name="estado" value="${v}" ${(r.estado || "hay") === v ? "checked" : ""} /><span>${l}</span></label>`)
           .join("")}</div></div>`,
       ) +
-      group("Tonos", area("Un tono por línea", "tonos", String(r.tonos ?? "").split("|").join("\n"), 4, "Dejalo vacío si el producto no tiene tonos.")) +
+      group(
+        "Tonos y fotos",
+        `<p class="adm-note">Agregá un tono por cada color y poné sus fotos. La primera es la que se muestra en la tienda. Subí las fotos a Cloudinary y pegá los enlaces (podés pegar varios juntos).</p>
+        <div class="adm-variants" data-variants>${stored(r).variantes.map((v) => variantCard(v.nombre, v.fotos)).join("")}</div>
+        <button class="btn btn--secondary btn--sm adm-addpart" type="button" data-variant-add>Agregar tono</button>`,
+      ) +
+      group("Fotos generales", `<p class="adm-note">Para productos sin tonos, o para los tonos que no tengan foto propia.</p><div data-general>${photoList(stored(r).fotos)}</div>`) +
       group("Textos", area("Descripción", "descripcion", r.descripcion, 3) + area("Ingredientes", "ingredientes", r.ingredientes, 2)) +
-      photoField(r.foto) +
       group("Orden", field("Posición en la tienda", "orden", r.orden ?? "", 'min="1" step="1"', "number", "Opcional. El 1 va primero."));
   } else {
     const parts = String(r.productos ?? "")
@@ -390,13 +467,29 @@ $("[data-form]").addEventListener("submit", async (e) => {
     if (!get("nombre")) return formError("Falta el nombre.");
     const precio = get("precio");
     if (precio === "" || Number(precio) < 0) return formError("Falta el precio.");
+    const variantes: { nombre: string; fotos: string[] }[] = [];
+    for (const card of dialog.querySelectorAll("[data-variant]")) {
+      const nombre = card.querySelector<HTMLInputElement>("[data-variant-name]")!.value.replace(/\|/g, "/").trim();
+      const fotos = readShots(card);
+      if (!nombre && !fotos.length) continue;
+      if (!nombre) return formError("Hay un tono con fotos pero sin nombre.");
+      if (variantes.some((v) => slug(v.nombre) === slug(nombre))) return formError(`El tono «${nombre}» está repetido.`);
+      variantes.push({ nombre, fotos });
+    }
+    const generales = readShots(dialog.querySelector("[data-general]")!);
+    if ([...generales, ...variantes.flatMap((v) => v.fotos)].some((x) => !https(x)))
+      return formError("Todas las fotos tienen que ser enlaces que empiecen con https://");
+    const principal = generales[0] ?? variantes.find((v) => v.fotos.length)?.fotos[0];
+    if (principal) out.foto = principal; // miniatura de la lista
     Object.assign(out, {
       nombre: get("nombre"),
       marca: get("marca"),
       categoria: get("categoria") || "Otros",
       precio: Number(precio),
       estado: get("estado") || "hay",
-      tonos: get("tonos").split("\n").map((t) => t.trim()).filter(Boolean).join("|"),
+      tonos: variantes.map((v) => v.nombre).join("|"),
+      variantes,
+      fotos: generales,
       descripcion: get("descripcion"),
       ingredientes: get("ingredientes"),
     });
@@ -505,10 +598,31 @@ importGo.addEventListener("click", async () => {
   }
 });
 
+// ---------- Ajustes: número de WhatsApp ----------
+const phoneInput = $<HTMLInputElement>("[data-phone]");
+async function loadSettings() {
+  const snap = await getDoc(doc(db, "config", "contacto"));
+  phoneInput.value = String(snap.data()?.whatsapp ?? "");
+  $("[data-phone-warn]").hidden = !!phoneInput.value;
+}
+$("[data-settings]").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const whatsapp = phoneInput.value.replace(/\D/g, "");
+  if (whatsapp.length < 10 || whatsapp.length > 15) return say("Revisá el número: va con código de país y de área, entre 10 y 15 dígitos.");
+  try {
+    await setDoc(doc(db, "config", "contacto"), { whatsapp });
+    phoneInput.value = whatsapp;
+    $("[data-phone-warn]").hidden = true;
+    say("Número guardado. Los pedidos ya llegan a ese WhatsApp.");
+  } catch (err) {
+    say(friendly(err));
+  }
+});
+
 // Solo en desarrollo: /admin/#demo muestra el panel con datos de ejemplo, sin iniciar sesión.
 if (import.meta.env.DEV && location.hash === "#demo") {
   data.productos = [
-    { id: "labial-rosa", nombre: "Labial mate Rosa Kiki", marca: "Mely", categoria: "Labios", precio: 9500, estado: "hay", tonos: "Rosa|Nude|Coral" },
+    { id: "labial-rosa", nombre: "Labial mate Rosa Kiki", marca: "Mely", categoria: "Labios", precio: 9500, estado: "hay", tonos: "Rosa|Nude|Coral", variantes: [{ nombre: "Rosa", fotos: [] }, { nombre: "Nude", fotos: [] }, { nombre: "Coral", fotos: [] }] },
     { id: "base-fluida", nombre: "Base fluida satinada", marca: "Tejar", categoria: "Rostro", precio: 14200, estado: "pedido", tonos: "01|02|03" },
     { id: "mascara", nombre: "Máscara de pestañas", marca: "Mely", categoria: "Ojos", precio: 8800, estado: "tanda" },
     { id: "serum", nombre: "Sérum hidratante", marca: "Tejar", categoria: "Skincare", precio: 18900, estado: "agotado" },

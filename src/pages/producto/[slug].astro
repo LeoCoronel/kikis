@@ -1,10 +1,10 @@
 ---
-import { u } from "../../config";
+import { u, photoUrl } from "../../config";
 import Base from "../../layouts/Base.astro";
 import Nav from "../../components/Nav.astro";
 import Footer from "../../components/Footer.astro";
 import ProductCard from "../../components/ProductCard.astro";
-import { loadCatalog, ESTADO_LABEL, money, slugify, fotoDe } from "../../lib/catalog";
+import { loadCatalog, ESTADO_LABEL, money, slugify } from "../../lib/catalog";
 
 export async function getStaticPaths() {
   const all = await loadCatalog();
@@ -14,7 +14,9 @@ const { p } = Astro.props;
 const all = await loadCatalog();
 const related = all.filter((x) => x.id !== p.id && x.categoria === p.categoria).slice(0, 4);
 const out = p.estado === "agotado";
-const foto = fotoDe(p, 960);
+const fotosDe = (i: number) => (p.variantes[i]?.fotos.length ? p.variantes[i].fotos : p.fotos);
+const galeria = p.variantes.length ? fotosDe(0) : p.fotos.length ? p.fotos : p.fotoArchivo ? [p.fotoArchivo] : [];
+const foto = photoUrl(galeria[0] ?? "", 960);
 const catSlug = slugify(p.categoria);
 const desc = p.descripcion || `${p.nombre}${p.marca ? ` de ${p.marca}` : ""} en Kiki's makeup.`;
 ---
@@ -38,9 +40,16 @@ const desc = p.descripcion || `${p.nombre}${p.marca ? ` de ${p.marca}` : ""} en 
       data-price={p.precio}
       data-url={u(`/producto/${p.slug}/`)}
     >
-      <div class="product__media span-6">
+      <div class="span-6 product__gallery">
+      <div class="product__media" data-media data-w="960">
         <span class={`shop-ph shop-ph--big ph--${slugify(p.categoria)}`}><b>{p.marca || "Kiki's"}</b><small>{p.categoria}</small><img src={u("/kiki/kiki-retrato-96.webp")} alt="" width="56" height="56" /></span>
         {foto && <img class="shop-photo" data-photo src={foto} alt={p.nombre} width="960" height="960" fetchpriority="high" />}
+      </div>
+      <div class="thumbs" data-thumbs hidden={galeria.length < 2}>
+        {galeria.map((f, i) => (
+          <button type="button" class="thumb" data-thumb={f} aria-pressed={i === 0 ? "true" : "false"} aria-label={`Foto ${i + 1}`}><img src={photoUrl(f, 160)} alt="" width="80" height="80" loading="lazy" /></button>
+        ))}
+      </div>
       </div>
 
       <div class="product__info span-6">
@@ -50,14 +59,14 @@ const desc = p.descripcion || `${p.nombre}${p.marca ? ` de ${p.marca}` : ""} en 
         <p class={`product__estado product__estado--${p.estado}`}>{ESTADO_LABEL[p.estado]}</p>
 
         {
-          p.tonos.length > 0 && (
+          p.variantes.length > 0 && (
             <fieldset class="tones" id="tonos">
               <legend>Tono</legend>
               <div class="tones__row">
-                {p.tonos.map((t, i) => (
+                {p.variantes.map((v, i) => (
                   <label class="tone">
-                    <input type="radio" name="tono" value={t} data-tone-input checked={i === 0} />
-                    <span>{t}</span>
+                    <input type="radio" name="tono" value={v.nombre} data-tone-input data-fotos={JSON.stringify(fotosDe(i))} checked={i === 0} />
+                    <span>{v.nombre}</span>
                   </label>
                 ))}
               </div>
