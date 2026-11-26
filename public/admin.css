@@ -176,3 +176,13 @@ body { background: var(--bg); }
 .adm-shot button:hover { background: var(--bg); color: var(--ink); }
 .adm-more { justify-self: start; margin-top: var(--s-2); background: none; border: 0; padding: var(--s-1) 0; color: var(--accent); font: 500 var(--t-small)/1 var(--font-text); cursor: pointer; }
 .adm-more:hover { text-decoration: underline; text-underline-offset: 4px; }
+@media (max-width: 760px) {
+  .adm-drawer { max-width: 100vw; }
+  .adm-tabs { gap: var(--s-4); }
+  .adm-tabs button { font-size: var(--t-small); }
+}
+.adm-variant__estado { display: grid; gap: var(--s-2); font-size: var(--t-small); font-weight: 500; }
+.adm-variant__estado select { height: var(--btn-h-sm, 40px); width: 100%; padding-left: var(--s-3); border: 1px solid var(--line-strong); border-radius: var(--r-sm); color: var(--ink); font: 400 var(--t-small)/1.4 var(--font-text); }
+.adm-drawer [data-single-estado][hidden] { display: none; }
+/* con el formulario abierto no se desplaza la página de atrás (evita la barra doble) */
+html:has(.adm-drawer[open]) { overflow: hidden; }

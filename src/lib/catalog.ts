@@ -6,6 +6,7 @@ export type Estado = "hay" | "pedido" | "tanda" | "agotado";
 export interface Variante {
   nombre: string;
   fotos: string[];
+  estado: Estado; // disponibilidad de este tono
 }
 
 export interface Product {
@@ -20,7 +21,7 @@ export interface Product {
   tonos: string[];
   variantes: Variante[]; // un tono con sus fotos
   fotos: string[]; // fotos generales (sirven para los tonos sin fotos propias)
-  estado: Estado;
+  estado: Estado; // con tonos: el mejor de ellos
   fotoArchivo: string; // la foto principal
 }
 
@@ -51,6 +52,13 @@ export const ESTADO_LABEL: Record<Estado, string> = {
 // del mejor al peor: el combo toma el peor estado de sus productos
 const ESTADO_RANK: Estado[] = ["hay", "pedido", "tanda", "agotado"];
 
+const toEstado = (v: unknown, base: Estado): Estado => {
+  const e = String(v ?? "").toLowerCase();
+  return ESTADO_RANK.includes(e as Estado) ? (e as Estado) : base;
+};
+/** Índice del tono que se muestra elegido: el primero con la mejor disponibilidad. */
+export const tonoInicial = (p: Product) => Math.max(0, p.variantes.findIndex((v) => v.estado === p.estado));
+
 export const money = (n: number) => "$" + n.toLocaleString("es-AR");
 
 /** "Máscara de pestañas" -> "mascara-de-pestanas" */
@@ -78,15 +86,15 @@ const json = (v: string | undefined): unknown => {
 const urls = (v: unknown) => (Array.isArray(v) ? v.map(String).filter(Boolean) : []);
 
 function toProduct(r: Record<string, string>, i: number): Product {
-  const estado = (r.estado || "hay").toLowerCase() as Estado;
+  const estado = toEstado(r.estado, "hay");
   const id = r.id || `p${i + 1}`;
   const guardadas = json(r.variantes);
   let variantes: Variante[] = (Array.isArray(guardadas) ? guardadas : [])
-    .map((v) => ({ nombre: String(v?.nombre ?? "").trim(), fotos: urls(v?.fotos) }))
+    .map((v) => ({ nombre: String(v?.nombre ?? "").trim(), fotos: urls(v?.fotos), estado: toEstado(v?.estado, estado) }))
     .filter((v) => v.nombre);
   // cargas anteriores: solo los nombres de los tonos
   if (!variantes.length)
-    variantes = (r.tonos || "").split("|").map((t) => t.trim()).filter(Boolean).map((nombre) => ({ nombre, fotos: [] }));
+    variantes = (r.tonos || "").split("|").map((t) => t.trim()).filter(Boolean).map((nombre) => ({ nombre, fotos: [], estado }));
   const propias = json(r.fotos);
   const fotos = Array.isArray(propias) ? urls(propias) : urls(r.foto ? [r.foto.trim()] : []);
   return {
@@ -102,7 +110,7 @@ function toProduct(r: Record<string, string>, i: number): Product {
     tonos: variantes.map((v) => v.nombre),
     variantes,
     fotos,
-    estado: estado in ESTADO_LABEL ? estado : "hay",
+    estado: variantes.length ? ESTADO_RANK.find((e) => variantes.some((v) => v.estado === e))! : estado,
     fotoArchivo: fotos[0] ?? variantes.find((v) => v.fotos.length)?.fotos[0] ?? "",
   };
 }
@@ -179,6 +187,7 @@ export function categoriesOf(items: Product[]) {
 /** Ilustración de Kiki para cada categoría de la portada (provisoria hasta tener fotos). */
 export const CATEGORY_KIKI: Record<string, string> = {
   labios: "labial",
+  labiales: "labial",
   rostro: "espejo",
   ojos: "maquillaje",
   skincare: "corazon",

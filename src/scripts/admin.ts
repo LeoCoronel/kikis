@@ -47,7 +47,9 @@ $("[data-signin]").addEventListener("click", async () => {
   const err = $("[data-login-error]");
   err.hidden = true;
   try {
-    await signInWithPopup(auth, new GoogleAuthProvider());
+    const google = new GoogleAuthProvider();
+    google.setCustomParameters({ prompt: "select_account" }); // siempre deja elegir la cuenta
+    await signInWithPopup(auth, google);
   } catch (e) {
     const code = (e as { code?: string }).code ?? "";
     if (code.includes("cancelled")) return;
@@ -139,7 +141,10 @@ function renderList(kind: Kind) {
       const thumb = img ? `<img class="adm-thumb" src="${esc(img)}" alt="" loading="lazy" />` : `<span class="adm-thumb adm-thumb--empty">sin foto</span>`;
       let sub: string, price: string, pill: string;
       if (kind === "productos") {
-        sub = [r.marca, r.categoria, r.id].filter(Boolean).join(" · ");
+        const tonos: { estado?: string }[] = Array.isArray(r.variantes) ? r.variantes : [];
+        const sinStock = tonos.filter((v) => v.estado === "agotado").length;
+        const resumen = tonos.length ? `${tonos.length} ${tonos.length === 1 ? "tono" : "tonos"}${sinStock ? `, ${sinStock} sin stock` : ""}` : "";
+        sub = [r.marca, r.categoria, r.id, resumen].filter(Boolean).join(" · ");
         price = money(r.precio);
         pill = `<span class="adm-pill adm-pill--${esc(r.estado || "hay")}">${esc(ESTADOS[r.estado] ?? ESTADOS.hay)}</span>`;
       } else {
@@ -220,22 +225,33 @@ const photoRow = (url = "") => `<div class="adm-shot">
   </div>`;
 const photoList = (urls: string[]) => `<div class="adm-shots" data-shots>${(urls.length ? urls : [""]).map(photoRow).join("")}</div>
   <button class="adm-more" type="button" data-shot-add>+ Otra foto</button>`;
-const variantCard = (nombre = "", fotos: string[] = []) => `<div class="adm-variant" data-variant>
+const variantCard = (nombre = "", fotos: string[] = [], estado = "hay") => `<div class="adm-variant" data-variant>
     <div class="adm-variant__head">
       <input type="text" data-variant-name value="${esc(nombre)}" placeholder="Nombre del tono, ej. Rosa" aria-label="Nombre del tono" />
       <button type="button" data-variant-remove>Quitar tono</button>
     </div>
+    <label class="adm-variant__estado"><span>Disponibilidad</span><select data-variant-estado>${Object.entries(ESTADOS)
+      .map(([v, l]) => `<option value="${v}" ${estado === v ? "selected" : ""}>${l}</option>`)
+      .join("")}</select></label>
     ${photoList(fotos)}
   </div>`;
 
 /** Tonos y fotos generales guardados (acepta las cargas anteriores: tonos como texto y una sola foto). */
-function stored(r: Rec): { variantes: { nombre: string; fotos: string[] }[]; fotos: string[] } {
+function stored(r: Rec): { variantes: { nombre: string; fotos: string[]; estado?: string }[]; fotos: string[] } {
   const variantes =
     Array.isArray(r.variantes) && r.variantes.length
       ? r.variantes
       : String(r.tonos ?? "").split("|").filter(Boolean).map((nombre) => ({ nombre, fotos: [] }));
   const fotos = Array.isArray(r.fotos) ? r.fotos : r.foto ? [r.foto] : [];
   return { variantes, fotos };
+}
+/** Con tonos, la disponibilidad se carga en cada uno; sin tonos, una sola para el producto. */
+function syncSingleEstado() {
+  const single = dialog.querySelector<HTMLElement>("[data-single-estado]");
+  if (!single) return;
+  const has = !!dialog.querySelector("[data-variant]");
+  single.hidden = has;
+  dialog.querySelector<HTMLElement>("[data-estado-hint]")!.hidden = !has;
 }
 const readShots = (box: Element) => [...box.querySelectorAll<HTMLInputElement>("[data-shot]")].map((i) => i.value.trim()).filter(Boolean);
 
@@ -247,6 +263,7 @@ dialog.addEventListener("click", (e) => {
     box.lastElementChild!.querySelector("input")!.focus();
   }
   if (t.matches("[data-variant-remove]")) t.closest("[data-variant]")!.remove();
+  if (t.matches("[data-variant-add],[data-variant-remove]")) syncSingleEstado();
   if (t.matches("[data-shot-add]")) {
     const box = t.previousElementSibling!;
     box.insertAdjacentHTML("beforeend", photoRow());
@@ -323,17 +340,18 @@ function openForm(kind: Kind, id: string | null) {
       group(
         "Precio y disponibilidad",
         `${field("Precio ($)", "precio", r.precio ?? "", 'min="0" step="1" inputmode="numeric" required', "number")}
-        <div class="field"><span>Disponibilidad</span><div class="adm-chips">${Object.entries(ESTADOS)
+        <p class="adm-note" data-estado-hint hidden>La disponibilidad se elige en cada tono, acá abajo.</p>
+        <div class="field" data-single-estado><span>Disponibilidad</span><div class="adm-chips">${Object.entries(ESTADOS)
           .map(([v, l]) => `<label class="tone"><input type="radio" name="estado" value="${v}" ${(r.estado || "hay") === v ? "checked" : ""} /><span>${l}</span></label>`)
           .join("")}</div></div>`,
       ) +
       group(
-        "Tonos y fotos",
-        `<p class="adm-note">Agregá un tono por cada color y poné sus fotos. La primera es la que se muestra en la tienda. Subí las fotos a Cloudinary y pegá los enlaces (podés pegar varios juntos).</p>
-        <div class="adm-variants" data-variants>${stored(r).variantes.map((v) => variantCard(v.nombre, v.fotos)).join("")}</div>
+        "Tonos (opcional)",
+        `<p class="adm-note">Solo si el producto viene en colores. Cada tono tiene su disponibilidad y sus fotos; la primera foto es la que se muestra. Subí las fotos a Cloudinary y pegá los enlaces (podés pegar varios juntos).</p>
+        <div class="adm-variants" data-variants>${stored(r).variantes.map((v) => variantCard(v.nombre, v.fotos, v.estado ?? r.estado ?? "hay")).join("")}</div>
         <button class="btn btn--secondary btn--sm adm-addpart" type="button" data-variant-add>Agregar tono</button>`,
       ) +
-      group("Fotos generales", `<p class="adm-note">Para productos sin tonos, o para los tonos que no tengan foto propia.</p><div data-general>${photoList(stored(r).fotos)}</div>`) +
+      group("Fotos del producto", `<p class="adm-note">Para productos sin tonos, o para los tonos que no tengan foto propia.</p><div data-general>${photoList(stored(r).fotos)}</div>`) +
       group("Textos", area("Descripción", "descripcion", r.descripcion, 3) + area("Ingredientes", "ingredientes", r.ingredientes, 2)) +
       group("Orden", field("Posición en la tienda", "orden", r.orden ?? "", 'min="1" step="1"', "number", "Opcional. El 1 va primero."));
   } else {
@@ -361,6 +379,7 @@ function openForm(kind: Kind, id: string | null) {
       group("Orden", field("Posición", "orden", r.orden ?? "", 'min="1" step="1"', "number", "Opcional. El 1 va primero."));
   }
   $("[data-fields]").innerHTML = html;
+  syncSingleEstado();
   dialog.showModal();
   $("[data-fields]").scrollTop = 0;
 }
@@ -467,14 +486,14 @@ $("[data-form]").addEventListener("submit", async (e) => {
     if (!get("nombre")) return formError("Falta el nombre.");
     const precio = get("precio");
     if (precio === "" || Number(precio) < 0) return formError("Falta el precio.");
-    const variantes: { nombre: string; fotos: string[] }[] = [];
+    const variantes: { nombre: string; fotos: string[]; estado: string }[] = [];
     for (const card of dialog.querySelectorAll("[data-variant]")) {
       const nombre = card.querySelector<HTMLInputElement>("[data-variant-name]")!.value.replace(/\|/g, "/").trim();
       const fotos = readShots(card);
       if (!nombre && !fotos.length) continue;
       if (!nombre) return formError("Hay un tono con fotos pero sin nombre.");
       if (variantes.some((v) => slug(v.nombre) === slug(nombre))) return formError(`El tono «${nombre}» está repetido.`);
-      variantes.push({ nombre, fotos });
+      variantes.push({ nombre, fotos, estado: card.querySelector<HTMLSelectElement>("[data-variant-estado]")!.value });
     }
     const generales = readShots(dialog.querySelector("[data-general]")!);
     if ([...generales, ...variantes.flatMap((v) => v.fotos)].some((x) => !https(x)))
@@ -486,7 +505,8 @@ $("[data-form]").addEventListener("submit", async (e) => {
       marca: get("marca"),
       categoria: get("categoria") || "Otros",
       precio: Number(precio),
-      estado: get("estado") || "hay",
+      // con tonos, el producto queda con la mejor disponibilidad entre ellos
+      estado: Object.keys(ESTADOS).find((e) => variantes.some((v) => v.estado === e)) ?? (get("estado") || "hay"),
       tonos: variantes.map((v) => v.nombre).join("|"),
       variantes,
       fotos: generales,
@@ -622,7 +642,7 @@ $("[data-settings]").addEventListener("submit", async (e) => {
 // Solo en desarrollo: /admin/#demo muestra el panel con datos de ejemplo, sin iniciar sesión.
 if (import.meta.env.DEV && location.hash === "#demo") {
   data.productos = [
-    { id: "labial-rosa", nombre: "Labial mate Rosa Kiki", marca: "Mely", categoria: "Labios", precio: 9500, estado: "hay", tonos: "Rosa|Nude|Coral", variantes: [{ nombre: "Rosa", fotos: [] }, { nombre: "Nude", fotos: [] }, { nombre: "Coral", fotos: [] }] },
+    { id: "labial-rosa", nombre: "Labial mate Rosa Kiki", marca: "Mely", categoria: "Labios", precio: 9500, estado: "hay", tonos: "Rosa|Nude|Coral", variantes: [{ nombre: "Rosa", fotos: [], estado: "hay" }, { nombre: "Nude", fotos: [], estado: "pedido" }, { nombre: "Coral", fotos: [], estado: "agotado" }] },
     { id: "base-fluida", nombre: "Base fluida satinada", marca: "Tejar", categoria: "Rostro", precio: 14200, estado: "pedido", tonos: "01|02|03" },
     { id: "mascara", nombre: "Máscara de pestañas", marca: "Mely", categoria: "Ojos", precio: 8800, estado: "tanda" },
     { id: "serum", nombre: "Sérum hidratante", marca: "Tejar", categoria: "Skincare", precio: 18900, estado: "agotado" },

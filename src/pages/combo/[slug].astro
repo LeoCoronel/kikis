@@ -4,7 +4,7 @@ import Base from "../../layouts/Base.astro";
 import Nav from "../../components/Nav.astro";
 import Footer from "../../components/Footer.astro";
 import ComboCard from "../../components/ComboCard.astro";
-import { loadCombos, ESTADO_LABEL, money, fotoDe } from "../../lib/catalog";
+import { loadCombos, ESTADO_LABEL, money, fotoDe, tonoInicial } from "../../lib/catalog";
 
 export async function getStaticPaths() {
   const combos = await loadCombos();
@@ -46,13 +46,13 @@ const parts = c.items.flatMap((it) =>
         <h1>{c.nombre}</h1>
         <p class="product__price">{money(c.precio)}</p>
         {c.ahorro > 0 && <p class="product__save">Por separado {money(c.separado)}. Ahorrás {money(c.ahorro)}.</p>}
-        <p class={`product__estado product__estado--${c.estado}`}>{ESTADO_LABEL[c.estado]}</p>
+        <p class={`product__estado product__estado--${c.estado}`} data-estado-label>{ESTADO_LABEL[c.estado]}</p>
 
         <div class="combo-parts" id="tonos">
           <h2>Qué incluye</h2>
           {
             parts.map((part, i) => (
-              <div class="combo-part">
+              <div class="combo-part" data-part-estado={part.product.variantes.length ? undefined : part.product.estado}>
                 <div class="combo-part__head">
                   <a href={u(`/producto/${part.product.slug}/`)}>{part.label}</a>
                   <small>{[part.product.marca, money(part.product.precio)].filter(Boolean).join(" · ")}</small>
@@ -61,10 +61,10 @@ const parts = c.items.flatMap((it) =>
                   <fieldset class="tones">
                     <legend class="sr-only">Tono de {part.label}</legend>
                     <div class="tones__row">
-                      {part.product.tonos.map((t, k) => (
-                        <label class="tone">
-                          <input type="radio" name={`parte-${i}`} value={t} data-tone-input data-comp={part.label} checked={k === 0} />
-                          <span>{t}</span>
+                      {part.product.variantes.map((v, k) => (
+                        <label class:list={["tone", { "tone--out": v.estado === "agotado" }]}>
+                          <input type="radio" name={`parte-${i}`} value={v.nombre} data-tone-input data-comp={part.label} data-estado={v.estado} checked={k === tonoInicial(part.product)} />
+                          <span>{v.nombre}</span>
                         </label>
                       ))}
                     </div>
@@ -76,7 +76,7 @@ const parts = c.items.flatMap((it) =>
         </div>
 
         <div class="btn-row product__actions">
-          <button class="btn btn--secondary" type="button" data-add disabled={out}>{out ? "Agotado" : "Agregar al pedido"}</button>
+          <button class="btn btn--primary" type="button" data-add disabled={out}>{out ? "Agotado" : "Agregar al pedido"}</button>
           <a class="link" href={u("/pedido/")}>Ver mi pedido</a>
         </div>
       </div>

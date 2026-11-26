@@ -40,21 +40,21 @@ const brands = [...new Set(products.map((p) => p.marca).filter(Boolean))].sort((
       <label class="field">
         <span class="sr-only">Categoría</span>
         <select data-f="cat">
-          <option value="">Todas las categorías</option>
+          <option value="">Categorías</option>
           {categories.map((c) => <option value={c.nombre}>{c.nombre} ({c.total})</option>)}
         </select>
       </label>
       <label class="field">
         <span class="sr-only">Marca</span>
         <select data-f="brand">
-          <option value="">Todas las marcas</option>
+          <option value="">Marcas</option>
           {brands.map((b) => <option value={b}>{b}</option>)}
         </select>
       </label>
       <label class="field">
         <span class="sr-only">Disponibilidad</span>
         <select data-f="estado">
-          <option value="">Toda la disponibilidad</option>
+          <option value="">Disponibilidad</option>
           <option value="hay">Hay disponible</option>
           <option value="pedido">Por pedido</option>
           <option value="tanda">Próxima tanda</option>
@@ -63,7 +63,7 @@ const brands = [...new Set(products.map((p) => p.marca).filter(Boolean))].sort((
       <label class="field">
         <span class="sr-only">Ordenar</span>
         <select data-f="sort">
-          <option value="novedades">Orden de la tienda</option>
+          <option value="novedades">Ordenar</option>
           <option value="precio-menor">Precio: menor a mayor</option>
           <option value="precio-mayor">Precio: mayor a menor</option>
           <option value="nombre">Nombre: A a Z</option>

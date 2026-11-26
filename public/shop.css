@@ -196,3 +196,19 @@ img.shop-photo { position: absolute; inset: 0; width: 100%; height: 100%; object
 .thumb { width: 80px; height: 80px; padding: 0; border: 2px solid transparent; border-radius: var(--r-md); overflow: hidden; background: var(--surface); cursor: pointer; }
 .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .thumb[aria-pressed="true"] { border-color: var(--ink); }
+/* indicio de que la fila de tonos sigue hacia el costado */
+.tones--card .tones__row { padding-right: 24px; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); }
+@media (max-width: 479px) {
+  .shop-card .shop-card__add { min-width: 0; padding-inline: var(--s-2); font-size: 14px; white-space: nowrap; }
+}
+/* tono sin stock: se puede mirar, pero se ve tachado */
+.tone--out span { text-decoration: line-through; border-style: dashed; color: var(--muted); }
+.tone--out input:checked + span { color: var(--bg); }
+
+/* ============================================================ portada: cada sección mide lo que su contenido */
+#top > section.section, #top > section.home-hero, footer.closing { height: auto; min-height: 0; }
+#top > section.section > .wrap, #top > section.home-hero > .wrap, footer.closing > .wrap { height: auto; }
+@media (min-width: 1024px) {
+  /* Kiki se achica en pantallas bajas para que la portada entre entera */
+  .home-hero__art img { width: auto; max-width: 100%; height: auto; max-height: min(580px, calc(100svh - var(--nav) - var(--s-8))); }
+}

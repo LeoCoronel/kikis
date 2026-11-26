@@ -1,6 +1,6 @@
 ---
 import { u, photoUrl } from "../config";
-import { ESTADO_LABEL, money, slugify, type Product } from "../lib/catalog";
+import { ESTADO_LABEL, money, slugify, tonoInicial, type Product } from "../lib/catalog";
 interface Props {
   p: Product;
   order?: number; // posición en la planilla, para ordenar por "Novedades"
@@ -10,7 +10,9 @@ const href = u(`/producto/${p.slug}/`);
 const out = p.estado === "agotado";
 // fotos de cada tono (o las generales si el tono no tiene)
 const fotosDe = (i: number) => (p.variantes[i]?.fotos.length ? p.variantes[i].fotos : p.fotos);
-const foto = photoUrl(p.variantes.length ? (fotosDe(0)[0] ?? p.fotoArchivo) : p.fotoArchivo, 600);
+const inicial = tonoInicial(p);
+const foto = photoUrl(p.variantes.length ? (fotosDe(inicial)[0] ?? p.fotoArchivo) : p.fotoArchivo, 600);
+const estados = p.variantes.length ? [...new Set(p.variantes.map((v) => v.estado))].join(" ") : p.estado;
 // texto de búsqueda sin tildes ni mayúsculas
 const search = [p.nombre, p.marca, p.categoria, p.descripcion, ...p.tonos]
   .join(" ")
@@ -28,6 +30,7 @@ const search = [p.nombre, p.marca, p.categoria, p.descripcion, ...p.tonos]
   data-url={href}
   data-cat={p.categoria}
   data-estado={p.estado}
+  data-estados={estados}
   data-order={order}
   data-search={search}
 >
@@ -39,15 +42,15 @@ const search = [p.nombre, p.marca, p.categoria, p.descripcion, ...p.tonos]
     <h3><a href={href}>{p.nombre}</a></h3>
     <span class="tile__price">{money(p.precio)}</span>
   </div>
-  <p class="tile__facts">{[p.marca, ESTADO_LABEL[p.estado]].filter(Boolean).join(" · ")}</p>
+  <p class="tile__facts">{p.marca && `${p.marca} · `}<span data-estado-label>{ESTADO_LABEL[p.estado]}</span></p>
   {
     p.variantes.length > 0 && (
       <fieldset class="tones tones--card">
         <legend class="sr-only">Tono de {p.nombre}</legend>
         <div class="tones__row">
           {p.variantes.map((v, i) => (
-            <label class="tone">
-              <input type="radio" name={`tono-${p.id}`} value={v.nombre} data-tone-input data-fotos={JSON.stringify(fotosDe(i))} checked={i === 0} />
+            <label class:list={["tone", { "tone--out": v.estado === "agotado" }]}>
+              <input type="radio" name={`tono-${p.id}`} value={v.nombre} data-tone-input data-estado={v.estado} data-fotos={JSON.stringify(fotosDe(i))} checked={i === inicial} />
               <span>{v.nombre}</span>
             </label>
           ))}

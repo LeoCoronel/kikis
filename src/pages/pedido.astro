@@ -9,7 +9,7 @@ const all = await loadCatalog();
 const combos = await loadCombos();
 // Precios y disponibilidad vigentes, para refrescar lo guardado en el navegador
 const prices = {
-  ...Object.fromEntries(all.map((p) => [p.id, { name: p.nombre, brand: p.marca, price: p.precio, estado: p.estado, url: u(`/producto/${p.slug}/`) }])),
+  ...Object.fromEntries(all.map((p) => [p.id, { name: p.nombre, brand: p.marca, price: p.precio, estado: p.estado, tonos: Object.fromEntries(p.variantes.map((v) => [v.nombre, v.estado])), url: u(`/producto/${p.slug}/`) }])),
   ...Object.fromEntries(combos.map((c) => [c.id, { name: c.nombre, brand: "", price: c.precio, estado: c.estado, url: u(`/combo/${c.slug}/`) }])),
 };
 ---

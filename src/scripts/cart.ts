@@ -44,6 +44,36 @@ function badge() {
   });
 }
 
+/* ------------------------------------------------------------ disponibilidad según el tono elegido */
+// del mejor al peor (igual que en lib/catalog.ts)
+const ESTADOS = ["hay", "pedido", "tanda", "agotado"];
+const ESTADO_LABEL = ["Hay disponible", "Por pedido", "Próxima tanda", "Agotado"];
+
+/** Un producto toma el estado del tono elegido; un combo, el peor de sus partes. */
+function syncEstado(item: HTMLElement) {
+  const states = [
+    ...$$<HTMLInputElement>("input[data-tone-input]:checked", item).map((r) => r.dataset.estado),
+    ...$$("[data-part-estado]", item).map((p) => p.dataset.partEstado),
+  ];
+  if (!states.length) return;
+  const i = Math.max(0, ...states.map((s) => ESTADOS.indexOf(s ?? "")));
+  const label = $("[data-estado-label]", item);
+  if (label) {
+    label.textContent = ESTADO_LABEL[i];
+    if (label.classList.contains("product__estado")) label.className = `product__estado product__estado--${ESTADOS[i]}`;
+  }
+  const add = $<HTMLButtonElement>("[data-add]", item);
+  if (add) {
+    add.disabled = ESTADOS[i] === "agotado";
+    add.textContent = add.disabled ? "Agotado" : "Agregar al pedido";
+  }
+}
+document.addEventListener("change", (e) => {
+  const input = e.target as HTMLInputElement;
+  const item = input.matches?.("input[data-tone-input]") ? input.closest<HTMLElement>("[data-item]") : null;
+  if (item) syncEstado(item);
+});
+
 /* ------------------------------------------------------------ agregar desde cualquier página */
 document.addEventListener("click", (e) => {
   const add = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-add]");
@@ -68,6 +98,7 @@ document.addEventListener("click", (e) => {
   setTimeout(() => {
     add.textContent = label;
     add.disabled = false;
+    syncEstado(item); // por si cambió el tono mientras tanto
   }, 1200);
 });
 
@@ -79,7 +110,7 @@ const totalRow = $("[data-order-total]");
 const note = $("[data-order-note]");
 
 // Precios y disponibilidad vigentes (de la última construcción del sitio)
-let live: Record<string, { name: string; brand: string; price: number; estado: string; url?: string }> = {};
+let live: Record<string, { name: string; brand: string; price: number; estado: string; tonos?: Record<string, string>; url?: string }> = {};
 const liveTag = $("#order-prices");
 if (liveTag?.textContent) {
   try {
@@ -104,7 +135,7 @@ function renderOrder() {
   list.innerHTML = lines
     .map((l, i) => {
       const sub = [l.brand, l.tono].filter(Boolean).join(" · ");
-      const out = live[l.id]?.estado === "agotado";
+      const out = (live[l.id]?.tonos?.[l.tono] ?? live[l.id]?.estado) === "agotado";
       return `<li class="order-item">
         <span class="rows__name"><a href="${esc(l.url ?? import.meta.env.BASE_URL + "tienda/")}">${esc(l.name)}</a>${sub ? `<small>${esc(sub)}${out ? " · Agotado" : ""}</small>` : out ? "<small>Agotado</small>" : ""}</span>
         <span class="order-qty">

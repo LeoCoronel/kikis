@@ -4,7 +4,7 @@ import Base from "../../layouts/Base.astro";
 import Nav from "../../components/Nav.astro";
 import Footer from "../../components/Footer.astro";
 import ProductCard from "../../components/ProductCard.astro";
-import { loadCatalog, ESTADO_LABEL, money, slugify } from "../../lib/catalog";
+import { loadCatalog, ESTADO_LABEL, money, slugify, tonoInicial } from "../../lib/catalog";
 
 export async function getStaticPaths() {
   const all = await loadCatalog();
@@ -15,7 +15,8 @@ const all = await loadCatalog();
 const related = all.filter((x) => x.id !== p.id && x.categoria === p.categoria).slice(0, 4);
 const out = p.estado === "agotado";
 const fotosDe = (i: number) => (p.variantes[i]?.fotos.length ? p.variantes[i].fotos : p.fotos);
-const galeria = p.variantes.length ? fotosDe(0) : p.fotos.length ? p.fotos : p.fotoArchivo ? [p.fotoArchivo] : [];
+const inicial = tonoInicial(p);
+const galeria = p.variantes.length ? fotosDe(inicial) : p.fotos.length ? p.fotos : p.fotoArchivo ? [p.fotoArchivo] : [];
 const foto = photoUrl(galeria[0] ?? "", 960);
 const catSlug = slugify(p.categoria);
 const desc = p.descripcion || `${p.nombre}${p.marca ? ` de ${p.marca}` : ""} en Kiki's makeup.`;
@@ -56,7 +57,7 @@ const desc = p.descripcion || `${p.nombre}${p.marca ? ` de ${p.marca}` : ""} en 
         {p.marca && <p class="t-label muted">{p.marca}</p>}
         <h1>{p.nombre}</h1>
         <p class="product__price">{money(p.precio)}</p>
-        <p class={`product__estado product__estado--${p.estado}`}>{ESTADO_LABEL[p.estado]}</p>
+        <p class={`product__estado product__estado--${p.estado}`} data-estado-label>{ESTADO_LABEL[p.estado]}</p>
 
         {
           p.variantes.length > 0 && (
@@ -64,8 +65,8 @@ const desc = p.descripcion || `${p.nombre}${p.marca ? ` de ${p.marca}` : ""} en 
               <legend>Tono</legend>
               <div class="tones__row">
                 {p.variantes.map((v, i) => (
-                  <label class="tone">
-                    <input type="radio" name="tono" value={v.nombre} data-tone-input data-fotos={JSON.stringify(fotosDe(i))} checked={i === 0} />
+                  <label class:list={["tone", { "tone--out": v.estado === "agotado" }]}>
+                    <input type="radio" name="tono" value={v.nombre} data-tone-input data-estado={v.estado} data-fotos={JSON.stringify(fotosDe(i))} checked={i === inicial} />
                     <span>{v.nombre}</span>
                   </label>
                 ))}
@@ -75,7 +76,7 @@ const desc = p.descripcion || `${p.nombre}${p.marca ? ` de ${p.marca}` : ""} en 
         }
 
         <div class="btn-row product__actions">
-          <button class="btn btn--secondary" type="button" data-add disabled={out}>{out ? "Agotado" : "Agregar al pedido"}</button>
+          <button class="btn btn--primary" type="button" data-add disabled={out}>{out ? "Agotado" : "Agregar al pedido"}</button>
           <a class="link" href={u("/pedido/")}>Ver mi pedido</a>
         </div>
 

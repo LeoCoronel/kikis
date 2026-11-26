@@ -40,7 +40,7 @@ if (shop) {
     const found = cards.filter((c) => {
       if (cat.value === "Combos" ? c.dataset.combo !== "1" : cat.value && c.dataset.cat !== cat.value) return false;
       if (brand.value && c.dataset.brand !== brand.value) return false;
-      if (estado.value && c.dataset.estado !== estado.value) return false;
+      if (estado.value && !(c.dataset.estados ?? c.dataset.estado ?? "").split(" ").includes(estado.value)) return false;
       const hay = c.dataset.search ?? "";
       return words.every((x) => hay.includes(x));
     });
